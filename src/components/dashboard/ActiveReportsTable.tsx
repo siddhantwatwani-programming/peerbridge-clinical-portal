@@ -1,0 +1,73 @@
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { FileText, Send } from 'lucide-react';
+
+interface Report {
+  id: string;
+  patient: string;
+  studyType: string;
+  startDate: string;
+}
+
+const reports: Report[] = [
+  { id: '1', patient: 'Mike Kam', studyType: '7 Day XT Holter', startDate: '07/08/2025' },
+  { id: '2', patient: 'Ravii Choudhary', studyType: '7 Day XT Holter', startDate: '07/29/2025' },
+];
+
+interface ActiveReportsTableProps {
+  onPreviewReport: () => void;
+}
+
+export const ActiveReportsTable: React.FC<ActiveReportsTableProps> = ({ onPreviewReport }) => {
+  return (
+    <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-border bg-secondary/30">
+              <th className="text-left p-4 text-sm font-medium text-muted-foreground">
+                PATIENT ↕
+              </th>
+              <th className="text-left p-4 text-sm font-medium text-muted-foreground">
+                STUDY TYPE ↕
+              </th>
+              <th className="text-left p-4 text-sm font-medium text-muted-foreground">
+                STUDY BEGIN DATE ↕
+              </th>
+              <th className="text-right p-4 text-sm font-medium text-muted-foreground">
+                ACTIONS
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {reports.map((report) => (
+              <tr key={report.id} className="table-row-hover border-b border-border last:border-0">
+                <td className="p-4 text-sm font-medium text-primary">
+                  {report.patient}
+                </td>
+                <td className="p-4 text-sm text-foreground">
+                  {report.studyType}
+                </td>
+                <td className="p-4 text-sm text-muted-foreground">
+                  {report.startDate}
+                </td>
+                <td className="p-4 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <Button variant="accent" size="sm" onClick={onPreviewReport}>
+                      <FileText className="h-4 w-4 mr-1" />
+                      Preview Report
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Send className="h-4 w-4 mr-1" />
+                      Send to history
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
