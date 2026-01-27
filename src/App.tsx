@@ -2,8 +2,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import NursePulse from "./pages/NursePulse";
+import Interpretation from "./pages/Interpretation";
+import { MainLayout } from "./components/MainLayout";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -15,8 +19,28 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          {/* Public routes */}
+          <Route path="/" element={<Login />} />
+          
+          {/* Protected routes with MainLayout */}
+          <Route element={<MainLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/nurse-pulse" element={<NursePulse />} />
+            <Route path="/interpretation" element={<Interpretation />} />
+            <Route path="/patients" element={<Dashboard />} />
+            <Route path="/users" element={<Dashboard />} />
+            <Route path="/inventory" element={<Dashboard />} />
+            <Route path="/inventory/devices" element={<Dashboard />} />
+            <Route path="/inventory/shipments" element={<Dashboard />} />
+            <Route path="/reports" element={<Dashboard />} />
+            <Route path="/research" element={<Dashboard />} />
+            <Route path="/transmissions" element={<NursePulse />} />
+            <Route path="/studies" element={<Dashboard />} />
+            <Route path="/settings" element={<Dashboard />} />
+            <Route path="/admin" element={<Dashboard />} />
+          </Route>
+          
+          {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

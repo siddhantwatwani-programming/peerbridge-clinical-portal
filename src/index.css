@@ -1,96 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* Peerbridge Health Design System
+   Navy (#1D2B44) + Orange (#F05A28) + Professional White
+   All colors in HSL for consistency
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Core Brand Colors */
+    --background: 210 20% 98%;
+    --foreground: 214 40% 19%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 214 40% 19%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 214 40% 19%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Navy - Primary */
+    --primary: 214 40% 19%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Light Navy - Secondary */
+    --secondary: 214 30% 95%;
+    --secondary-foreground: 214 40% 19%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted surfaces */
+    --muted: 214 20% 96%;
+    --muted-foreground: 214 20% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Peerbridge Orange - Accent/CTA */
+    --accent: 14 87% 55%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Destructive - Error states */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Success - Green for positive findings */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
 
-    --radius: 0.5rem;
+    /* Warning - Amber for attention */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
 
-    --sidebar-background: 0 0% 98%;
+    /* Clinical severity levels */
+    --severity-low: 142 71% 45%;
+    --severity-medium: 38 92% 50%;
+    --severity-high: 0 84% 60%;
+    --severity-critical: 0 90% 45%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Borders and inputs */
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 14 87% 55%;
 
-    --sidebar-primary: 240 5.9% 10%;
+    --radius: 0.625rem;
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    /* Glassmorphism */
+    --glass-bg: 214 40% 19% / 0.08;
+    --glass-border: 0 0% 100% / 0.2;
+    --glass-shadow: 214 40% 19% / 0.1;
 
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar */
+    --sidebar-background: 214 40% 19%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 14 87% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 214 35% 25%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 214 35% 25%;
+    --sidebar-ring: 14 87% 55%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 214 40% 10%;
+    --foreground: 210 20% 98%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 214 40% 14%;
+    --card-foreground: 210 20% 98%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 214 40% 14%;
+    --popover-foreground: 210 20% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 214 40% 19%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 214 30% 20%;
+    --secondary-foreground: 210 20% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 214 30% 20%;
+    --muted-foreground: 214 20% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 14 87% 55%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 214 30% 25%;
+    --input: 214 30% 25%;
+    --ring: 14 87% 55%;
+
+    --sidebar-background: 214 45% 12%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 14 87% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 214 35% 20%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 214 35% 20%;
+    --sidebar-ring: 14 87% 55%;
   }
 }
 
@@ -99,7 +129,189 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
-  body {
-    @apply bg-background text-foreground;
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
   }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@layer components {
+  /* Glass morphism panel */
+  .glass-panel {
+    @apply relative overflow-hidden rounded-xl;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--glass-bg)),
+      hsl(214 40% 19% / 0.04)
+    );
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: 0 8px 32px hsl(var(--glass-shadow));
+  }
+
+  /* Card with subtle hover */
+  .card-hover {
+    @apply transition-all duration-300 ease-out;
+  }
+  .card-hover:hover {
+    @apply shadow-lg -translate-y-0.5;
+    box-shadow: 0 10px 40px -10px hsl(var(--accent) / 0.2);
+  }
+
+  /* Status chip base */
+  .status-chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium;
+    @apply transition-all duration-200 cursor-pointer;
+  }
+  .status-chip:hover {
+    @apply scale-105;
+  }
+
+  /* Severity glow effects */
+  .severity-glow-high {
+    box-shadow: 0 0 20px hsl(var(--severity-high) / 0.4),
+                0 0 40px hsl(var(--severity-high) / 0.2);
+  }
+  .severity-glow-critical {
+    animation: critical-pulse 2s ease-in-out infinite;
+  }
+
+  /* Loading skeleton with shimmer */
+  .skeleton-shimmer {
+    @apply relative overflow-hidden bg-muted;
+  }
+  .skeleton-shimmer::after {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(0 0% 100% / 0.4),
+      transparent
+    );
+    animation: shimmer 2s infinite;
+  }
+
+  /* Button ripple effect */
+  .btn-ripple {
+    @apply relative overflow-hidden;
+  }
+  .btn-ripple::after {
+    content: '';
+    @apply absolute inset-0 opacity-0;
+    background: radial-gradient(circle, hsl(0 0% 100% / 0.3) 10%, transparent 10.01%);
+    transform: scale(10);
+    transition: opacity 0.5s, transform 0.5s;
+  }
+  .btn-ripple:active::after {
+    @apply opacity-100;
+    transform: scale(0);
+    transition: 0s;
+  }
+
+  /* AI message bubble */
+  .ai-bubble {
+    @apply relative p-4 rounded-2xl rounded-bl-md;
+    background: linear-gradient(135deg, hsl(214 40% 19%), hsl(214 35% 25%));
+    color: white;
+  }
+  .ai-bubble::before {
+    content: '';
+    @apply absolute -left-2 bottom-2 w-4 h-4;
+    background: inherit;
+    clip-path: polygon(100% 0, 0 100%, 100% 100%);
+  }
+
+  /* Medical trust badge */
+  .trust-badge {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium;
+    background: linear-gradient(135deg, hsl(142 71% 45% / 0.15), hsl(142 71% 45% / 0.05));
+    color: hsl(142 50% 35%);
+    border: 1px solid hsl(142 71% 45% / 0.3);
+  }
+
+  /* Table row hover */
+  .table-row-hover {
+    @apply transition-colors duration-150;
+  }
+  .table-row-hover:hover {
+    @apply bg-muted/50;
+  }
+
+  /* Input focus ring */
+  .input-medical {
+    @apply border-2 border-border rounded-lg px-4 py-3;
+    @apply transition-all duration-200;
+    @apply focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/10;
+  }
+
+  /* Navigation link */
+  .nav-link {
+    @apply relative px-4 py-2 text-sm font-medium transition-colors duration-200;
+    @apply text-muted-foreground hover:text-foreground;
+  }
+  .nav-link.active {
+    @apply text-foreground;
+  }
+  .nav-link.active::after {
+    content: '';
+    @apply absolute bottom-0 left-4 right-4 h-0.5 bg-accent rounded-full;
+  }
+
+  /* ECG line animation */
+  .ecg-line {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: ecg-draw 3s linear infinite;
+  }
+}
+
+@layer utilities {
+  /* Confidence meter gradient */
+  .confidence-gradient {
+    background: linear-gradient(90deg, 
+      hsl(var(--severity-high)) 0%, 
+      hsl(var(--warning)) 50%, 
+      hsl(var(--success)) 100%
+    );
+  }
+}
+
+/* Keyframes */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes critical-pulse {
+  0%, 100% { 
+    box-shadow: 0 0 20px hsl(var(--severity-critical) / 0.4),
+                0 0 40px hsl(var(--severity-critical) / 0.2);
+  }
+  50% { 
+    box-shadow: 0 0 30px hsl(var(--severity-critical) / 0.6),
+                0 0 60px hsl(var(--severity-critical) / 0.3);
+  }
+}
+
+@keyframes ecg-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
 }
