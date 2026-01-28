@@ -11,6 +11,8 @@ import Patients from "./pages/Patients";
 import AddPatient from "./pages/AddPatient";
 import Users from "./pages/Users";
 import AddUser from "./pages/AddUser";
+import InventoryDevices from "./pages/InventoryDevices";
+import DeviceShipments from "./pages/DeviceShipments";
 import { SidebarLayout } from "./components/SidebarLayout";
 import NotFound from "./pages/NotFound";
 
@@ -35,9 +37,9 @@ const App = () => (
             <Route path="/patients/add" element={<AddPatient />} />
             <Route path="/users" element={<Users />} />
             <Route path="/users/add" element={<AddUser />} />
-            <Route path="/inventory" element={<Dashboard />} />
-            <Route path="/inventory/devices" element={<Dashboard />} />
-            <Route path="/inventory/shipments" element={<Dashboard />} />
+            <Route path="/inventory" element={<InventoryDevices />} />
+            <Route path="/inventory/devices" element={<InventoryDevices />} />
+            <Route path="/inventory/shipments" element={<DeviceShipments />} />
             <Route path="/reports" element={<Dashboard />} />
             <Route path="/research" element={<Dashboard />} />
             <Route path="/events" element={<Dashboard />} />
