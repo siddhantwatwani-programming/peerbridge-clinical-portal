@@ -42,7 +42,7 @@ const Login: React.FC = () => {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Left ECG line */}
         <svg 
-          className="absolute top-1/2 -translate-y-1/2 left-0 w-1/3 h-40 opacity-[0.08]"
+          className="absolute top-1/2 -translate-y-1/2 left-0 w-1/3 h-40 opacity-[0.15]"
           viewBox="0 0 400 100"
           preserveAspectRatio="none"
         >
@@ -51,13 +51,13 @@ const Login: React.FC = () => {
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            className="text-slate-400 animate-pulse"
+            className="text-accent animate-pulse"
           />
         </svg>
         
         {/* Right ECG line */}
         <svg 
-          className="absolute top-1/2 -translate-y-1/2 right-0 w-1/3 h-40 opacity-[0.08]"
+          className="absolute top-1/2 -translate-y-1/2 right-0 w-1/3 h-40 opacity-[0.15]"
           viewBox="0 0 400 100"
           preserveAspectRatio="none"
         >
@@ -66,14 +66,14 @@ const Login: React.FC = () => {
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            className="text-slate-400 animate-pulse"
+            className="text-accent animate-pulse"
             style={{ animationDelay: '1s' }}
           />
         </svg>
 
         {/* Subtle gradient orbs */}
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-accent/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
       </div>
 
       {/* Login Card */}
