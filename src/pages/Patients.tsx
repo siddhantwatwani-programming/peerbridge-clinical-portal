@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Plus, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -25,6 +26,7 @@ const patients: Patient[] = [
 ];
 
 const Patients: React.FC = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -42,7 +44,7 @@ const Patients: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-foreground">Patients</h1>
-        <Button variant="accent" className="gap-2">
+        <Button variant="accent" className="gap-2" onClick={() => navigate('/patients/add')}>
           <Plus className="h-4 w-4" />
           Add a New Patient
         </Button>

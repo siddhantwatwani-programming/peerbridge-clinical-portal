@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import NursePulse from "./pages/NursePulse";
 import Interpretation from "./pages/Interpretation";
 import Patients from "./pages/Patients";
+import AddPatient from "./pages/AddPatient";
 import { SidebarLayout } from "./components/SidebarLayout";
 import NotFound from "./pages/NotFound";
 
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/nurse-pulse" element={<NursePulse />} />
             <Route path="/interpretation" element={<Interpretation />} />
             <Route path="/patients" element={<Patients />} />
+            <Route path="/patients/add" element={<AddPatient />} />
             <Route path="/users" element={<Dashboard />} />
             <Route path="/inventory" element={<Dashboard />} />
             <Route path="/inventory/devices" element={<Dashboard />} />
