@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
-  Sparkles, 
+  HeartPulse, 
   Send, 
   X, 
   Minimize2,
@@ -215,10 +215,10 @@ export const ClinicalCopilot: React.FC = () => {
         <button
           onClick={handleOpen}
           className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group"
-          aria-label="Open Clinical Copilot"
+          aria-label="Open PeerBridge AI"
         >
-          <Sparkles className="h-5 w-5" />
-          <span className="font-medium">Clinical Copilot</span>
+          <HeartPulse className="h-5 w-5 animate-[pulse_1s_ease-in-out_infinite]" />
+          <span className="font-medium">PeerBridge AI</span>
         </button>
       )}
 
@@ -238,11 +238,11 @@ export const ClinicalCopilot: React.FC = () => {
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-border bg-primary/5 rounded-t-xl">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-primary">
-                <Sparkles className="h-4 w-4 text-primary-foreground" />
+              <div className="p-1.5 rounded-lg bg-accent">
+                <HeartPulse className="h-4 w-4 text-accent-foreground animate-[pulse_1s_ease-in-out_infinite]" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground text-sm">Clinical Copilot</h3>
+                <h3 className="font-semibold text-foreground text-sm">PeerBridge AI</h3>
                 {!isMinimized && (
                   <p className="text-xs text-muted-foreground">
                     Viewing: {pageContext.pageName}
