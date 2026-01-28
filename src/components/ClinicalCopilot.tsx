@@ -17,7 +17,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
-import peerbridgeIcon from '@/assets/peerbridge-icon-new.png';
+import peerbridgeAILogo from '@/assets/peerbridge-ai-logo.png';
 
 interface Message {
   id: string;
@@ -344,7 +344,7 @@ I'm here to help you navigate the **${pageContext.pageName}** and provide insigh
           >
             {isButtonCollapsed && !isButtonHovered ? (
               <img 
-                src={peerbridgeIcon} 
+                src={peerbridgeAILogo} 
                 alt="PeerBridge" 
                 className="h-6 w-6 rounded-full object-contain"
               />
