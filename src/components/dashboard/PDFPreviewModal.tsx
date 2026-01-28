@@ -15,7 +15,8 @@ import {
   MoreVertical,
   FileText,
   Maximize2,
-  Loader2
+  Loader2,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,6 +25,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import ReactMarkdown from 'react-markdown';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
@@ -51,6 +55,9 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
   const [scale, setScale] = useState(1.0);
   const [rotation, setRotation] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSummary, setShowSummary] = useState(false);
+  const [summary, setSummary] = useState<string>('');
+  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
 
   const pdfUrl = '/reports/sample-report.pdf';
 
@@ -64,16 +71,37 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
     setIsLoading(false);
   };
 
-  const handlePhysicianInterpretation = () => {
-    onClose();
-    navigate('/interpretation', { 
-      state: { 
-        patientName, 
-        studyType,
-        reportId,
-        showPdfPreview: true 
-      } 
-    });
+  const handleReportSummary = async () => {
+    if (summary) {
+      setShowSummary(!showSummary);
+      return;
+    }
+
+    setIsSummaryLoading(true);
+    setShowSummary(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('report-summary', {
+        body: { patientName, studyType, reportId }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data?.success && data?.summary) {
+        setSummary(data.summary);
+      } else {
+        throw new Error(data?.error || 'Failed to generate summary');
+      }
+    } catch (error) {
+      console.error('Error getting summary:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate summary';
+      toast.error(errorMessage);
+      setSummary('Unable to generate summary. Please try again.');
+    } finally {
+      setIsSummaryLoading(false);
+    }
   };
 
   const handleDownloadAll = () => {
@@ -245,30 +273,61 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
           </div>
         </div>
 
-        {/* PDF Content Area */}
-        <div className="flex-1 bg-[#525659] overflow-auto flex items-start justify-center p-4">
-          {isLoading && (
-            <div className="flex flex-col items-center justify-center h-full text-white gap-3">
-              <Loader2 className="h-8 w-8 animate-spin" />
-              <span>Loading PDF...</span>
+        {/* PDF Content Area with Summary Panel */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* PDF Viewer */}
+          <div className={`flex-1 bg-[#525659] overflow-auto flex items-start justify-center p-4 transition-all ${showSummary ? 'w-2/3' : 'w-full'}`}>
+            {isLoading && (
+              <div className="flex flex-col items-center justify-center h-full text-white gap-3">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <span>Loading PDF...</span>
+              </div>
+            )}
+            <Document
+              file={pdfUrl}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={onDocumentLoadError}
+              loading={null}
+              className="flex justify-center"
+            >
+              <Page
+                pageNumber={currentPage}
+                scale={scale}
+                rotate={rotation}
+                className="shadow-xl"
+                renderTextLayer={true}
+                renderAnnotationLayer={true}
+              />
+            </Document>
+          </div>
+
+          {/* AI Summary Panel */}
+          {showSummary && (
+            <div className="w-1/3 border-l border-border bg-card overflow-auto">
+              <div className="p-4 border-b border-border bg-primary/5">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-accent" />
+                  <h3 className="font-semibold text-foreground">PeerBridge AI Summary</h3>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  AI-generated clinical summary for {patientName}
+                </p>
+              </div>
+              
+              <div className="p-4">
+                {isSummaryLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 gap-3">
+                    <Loader2 className="h-6 w-6 animate-spin text-accent" />
+                    <span className="text-sm text-muted-foreground">Generating summary...</span>
+                  </div>
+                ) : (
+                  <div className="prose prose-sm max-w-none dark:prose-invert">
+                    <ReactMarkdown>{summary}</ReactMarkdown>
+                  </div>
+                )}
+              </div>
             </div>
           )}
-          <Document
-            file={pdfUrl}
-            onLoadSuccess={onDocumentLoadSuccess}
-            onLoadError={onDocumentLoadError}
-            loading={null}
-            className="flex justify-center"
-          >
-            <Page
-              pageNumber={currentPage}
-              scale={scale}
-              rotate={rotation}
-              className="shadow-xl"
-              renderTextLayer={true}
-              renderAnnotationLayer={true}
-            />
-          </Document>
         </div>
 
         {/* Footer Actions */}
@@ -276,9 +335,20 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="accent" onClick={handleDownloadAll}>
-            Download
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="outline" 
+              onClick={handleReportSummary}
+              disabled={isSummaryLoading}
+              className="gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              {showSummary ? 'Hide Summary' : 'Report Summary'}
+            </Button>
+            <Button variant="accent" onClick={handleDownloadAll}>
+              Download
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
