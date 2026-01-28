@@ -1,1 +1,7 @@
 project_id = "mtvkxyehvalsdzftpmhy"
+
+[functions.report-summary]
+verify_jwt = false
+
+[functions.clinical-copilot]
+verify_jwt = false

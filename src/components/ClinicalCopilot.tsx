@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   id: string;
@@ -58,6 +60,41 @@ const getPageContext = (pathname: string): PageContext => {
       route: '/interpretation',
       pageName: 'Physician Interpretation',
       description: 'Clinical report review and sign-off workflow'
+    },
+    '/events': {
+      route: '/events',
+      pageName: 'Patient Transmissions',
+      description: 'Patient-reported symptoms, transmission status, and physician assignments'
+    },
+    '/transmissions': {
+      route: '/transmissions',
+      pageName: 'Patient Transmissions',
+      description: 'Patient-reported symptoms, transmission status, and physician assignments'
+    },
+    '/research': {
+      route: '/research',
+      pageName: 'Research',
+      description: 'Clinical research studies and report analysis'
+    },
+    '/reports': {
+      route: '/reports',
+      pageName: 'Reports',
+      description: 'Clinical reports and documentation'
+    },
+    '/inventory': {
+      route: '/inventory',
+      pageName: 'Inventory',
+      description: 'Device inventory and management'
+    },
+    '/inventory/devices': {
+      route: '/inventory/devices',
+      pageName: 'Devices',
+      description: 'Medical device inventory and status tracking'
+    },
+    '/inventory/shipments': {
+      route: '/inventory/shipments',
+      pageName: 'Device Shipments',
+      description: 'Device shipment tracking and logistics'
     }
   };
 
@@ -68,55 +105,103 @@ const getPageContext = (pathname: string): PageContext => {
   };
 };
 
-const getContextualGreeting = (context: PageContext): string => {
-  const greetings: Record<string, string> = {
-    'Dashboard': "I see you're on the Dashboard. I can help you:\n\n• Summarize active reports and pending reviews\n• Highlight transmissions with symptoms\n• Explain items needing attention\n\nWhat would you like to know?",
-    'Patients': "I see you're viewing the Patients list. I can help you:\n\n• Explain patient demographics and MRN details\n• Guide you through patient lookup\n• Answer questions about patient records\n\nHow can I assist?",
-    'Add New Patient': "I see you're adding a new patient. I can help you:\n\n• Explain required fields and their purpose\n• Guide you through the registration process\n• Clarify data entry requirements\n\nWhat do you need help with?",
-    'Users': "I see you're on the Users page. I can help you:\n\n• Explain user roles and permissions\n• Guide user management tasks\n• Answer questions about access levels\n\nHow can I assist?",
-    'Nurse Pulse': "I see you're on Nurse Pulse monitoring. I can help you:\n\n• Explain severity indicators and scores\n• Highlight patients needing attention\n• Correlate symptoms with findings\n\nWhat would you like to review?",
-    'Physician Interpretation': "I see you're reviewing a clinical interpretation. I can help you:\n\n• Explain report sections and findings\n• Provide guideline context\n• Summarize notable patterns\n\nWhat would you like me to clarify?"
-  };
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/clinical-copilot`;
 
-  return greetings[context.pageName] || "I'm the Peerbridge Clinical Copilot. I can help you navigate and understand data on this screen. What would you like to know?";
-};
+async function streamChat({
+  messages,
+  pageContext,
+  onDelta,
+  onDone,
+  onError,
+}: {
+  messages: { role: string; content: string }[];
+  pageContext: PageContext;
+  onDelta: (deltaText: string) => void;
+  onDone: () => void;
+  onError: (error: string) => void;
+}) {
+  try {
+    const resp = await fetch(CHAT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      },
+      body: JSON.stringify({ messages, pageContext }),
+    });
 
-const generateResponse = (input: string, context: PageContext): string => {
-  const lowerInput = input.toLowerCase();
-
-  // Dashboard-specific responses
-  if (context.pageName === 'Dashboard') {
-    if (lowerInput.includes('report') || lowerInput.includes('active')) {
-      return "**What I see on this screen:**\nThe Dashboard displays active reports awaiting review.\n\n**Relevant evidence:**\nActive reports are listed with patient identifiers, study types, and status indicators.\n\n**Clinical note:**\nItems marked with elevated severity scores may warrant prioritized physician review.\n\n*This requires physician judgment for final interpretation.*";
+    if (resp.status === 429) {
+      onError('Rate limit exceeded. Please try again in a moment.');
+      return;
     }
-    if (lowerInput.includes('transmission') || lowerInput.includes('symptom')) {
-      return "**What I see on this screen:**\nPatient transmissions are displayed with symptom correlations.\n\n**Relevant evidence:**\nTransmissions showing patient-activated events or reported symptoms are flagged for attention.\n\n**Guideline context:**\nPer ACC/AHA guidance, symptom-correlated arrhythmias may have different clinical significance than asymptomatic findings.\n\n*This requires physician judgment for final interpretation.*";
+    if (resp.status === 402) {
+      onError('AI usage limit reached. Please contact support.');
+      return;
     }
+    if (!resp.ok || !resp.body) {
+      onError('Failed to start stream');
+      return;
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let textBuffer = '';
+    let streamDone = false;
+
+    while (!streamDone) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      textBuffer += decoder.decode(value, { stream: true });
+
+      let newlineIndex: number;
+      while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
+        let line = textBuffer.slice(0, newlineIndex);
+        textBuffer = textBuffer.slice(newlineIndex + 1);
+
+        if (line.endsWith('\r')) line = line.slice(0, -1);
+        if (line.startsWith(':') || line.trim() === '') continue;
+        if (!line.startsWith('data: ')) continue;
+
+        const jsonStr = line.slice(6).trim();
+        if (jsonStr === '[DONE]') {
+          streamDone = true;
+          break;
+        }
+
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+          if (content) onDelta(content);
+        } catch {
+          textBuffer = line + '\n' + textBuffer;
+          break;
+        }
+      }
+    }
+
+    // Final flush
+    if (textBuffer.trim()) {
+      for (let raw of textBuffer.split('\n')) {
+        if (!raw) continue;
+        if (raw.endsWith('\r')) raw = raw.slice(0, -1);
+        if (raw.startsWith(':') || raw.trim() === '') continue;
+        if (!raw.startsWith('data: ')) continue;
+        const jsonStr = raw.slice(6).trim();
+        if (jsonStr === '[DONE]') continue;
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+          if (content) onDelta(content);
+        } catch { /* ignore */ }
+      }
+    }
+
+    onDone();
+  } catch (error) {
+    console.error('Stream error:', error);
+    onError('Connection error. Please try again.');
   }
-
-  // Patients-specific responses
-  if (context.pageName === 'Patients' || context.pageName === 'Add New Patient') {
-    if (lowerInput.includes('mrn') || lowerInput.includes('medical record')) {
-      return "**What I see on this screen:**\nThe patient list displays MRN (Medical Record Number) for each patient.\n\n**Relevant evidence:**\nMRN is a unique identifier assigned to each patient for tracking across the healthcare system.\n\n**Clinical note:**\nEnsure MRN accuracy when creating orders to prevent patient matching errors.";
-    }
-    if (lowerInput.includes('required') || lowerInput.includes('field')) {
-      return "**What I see on this screen:**\nThe patient registration form contains demographic and contact fields.\n\n**Relevant evidence:**\nRequired fields typically include: Name, DOB, MRN, and primary contact information.\n\n**Clinical note:**\nAccurate demographic data ensures proper patient identification and communication.";
-    }
-  }
-
-  // Interpretation-specific responses
-  if (context.pageName === 'Physician Interpretation') {
-    if (lowerInput.includes('finding') || lowerInput.includes('rhythm')) {
-      return "**What I see on this screen:**\nThe interpretation panel displays study findings and rhythm analysis.\n\n**Relevant evidence:**\nFindings are categorized by rhythm type, ectopy burden, and notable events.\n\n**Guideline context:**\nPer ACC/AHA Holter guidelines, findings should be correlated with patient symptoms and clinical context.\n\n**Clinical note:**\nConsider comparison with prior studies when available to assess trending.\n\n*This requires physician judgment for final interpretation.*";
-    }
-    if (lowerInput.includes('sign') || lowerInput.includes('approve')) {
-      return "**What I see on this screen:**\nThe sign-off workflow allows physician review and approval.\n\n**Relevant evidence:**\nAI-suggested interpretations are provided with confidence scores based on findings analysis.\n\n**Clinical note:**\nAll AI suggestions are assistive only. Final interpretation authority rests with the reviewing physician.\n\n*This requires physician judgment for final interpretation.*";
-    }
-  }
-
-  // Generic contextual response
-  return `**What I see on this screen:**\nYou're currently on the ${context.pageName} page.\n\n**Context:**\n${context.description}\n\n**How I can help:**\nI can answer questions about the data displayed on this screen, explain clinical terminology, or provide guideline context for findings.\n\nCould you tell me more specifically what you'd like to know about?`;
-};
+}
 
 export const ClinicalCopilot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -130,30 +215,24 @@ export const ClinicalCopilot: React.FC = () => {
 
   const pageContext = getPageContext(location.pathname);
 
-  // Initialize with contextual greeting when opened
+  // Initialize with welcome message when opened
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       setMessages([{
         id: '1',
         role: 'assistant',
-        content: getContextualGreeting(pageContext),
+        content: `Welcome to **PeerBridge AI** - your clinical decision-support assistant.
+
+I'm here to help you navigate the **${pageContext.pageName}** and provide insights based on:
+- Visible screen data
+- Clinical guidelines (ACC/AHA)
+- Best practices for ambulatory ECG monitoring
+
+**How can I assist you today?**`,
         timestamp: new Date()
       }]);
     }
-  }, [isOpen, pageContext, messages.length]);
-
-  // Update greeting when page changes
-  useEffect(() => {
-    if (isOpen && messages.length > 0) {
-      const contextMessage: Message = {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: `*Navigated to ${pageContext.pageName}*\n\n${getContextualGreeting(pageContext)}`,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, contextMessage]);
-    }
-  }, [location.pathname]);
+  }, [isOpen, pageContext.pageName, messages.length]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -162,8 +241,8 @@ export const ClinicalCopilot: React.FC = () => {
     }
   }, [messages]);
 
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
+  const handleSend = async () => {
+    if (!inputValue.trim() || isTyping) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -176,18 +255,40 @@ export const ClinicalCopilot: React.FC = () => {
     setInputValue('');
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const response = generateResponse(userMessage.content, pageContext);
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: response,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, assistantMessage]);
-      setIsTyping(false);
-    }, 1200);
+    let assistantSoFar = '';
+    const upsertAssistant = (nextChunk: string) => {
+      assistantSoFar += nextChunk;
+      setMessages(prev => {
+        const last = prev[prev.length - 1];
+        if (last?.role === 'assistant' && last.id.startsWith('stream-')) {
+          return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
+        }
+        return [...prev, { id: `stream-${Date.now()}`, role: 'assistant', content: assistantSoFar, timestamp: new Date() }];
+      });
+    };
+
+    // Prepare message history for API
+    const apiMessages = messages
+      .filter(m => m.id !== '1') // Exclude initial welcome
+      .map(m => ({ role: m.role, content: m.content }));
+    apiMessages.push({ role: 'user', content: userMessage.content });
+
+    await streamChat({
+      messages: apiMessages,
+      pageContext,
+      onDelta: (chunk) => upsertAssistant(chunk),
+      onDone: () => setIsTyping(false),
+      onError: (error) => {
+        toast.error(error);
+        setIsTyping(false);
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: `I apologize, but I encountered an error: ${error}\n\nPlease try again or contact support if the issue persists.`,
+          timestamp: new Date()
+        }]);
+      }
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -300,19 +401,8 @@ export const ClinicalCopilot: React.FC = () => {
                             : "bg-secondary text-secondary-foreground rounded-bl-md"
                         )}
                       >
-                        <div className="whitespace-pre-wrap">
-                          {message.content.split('\n').map((line, i) => {
-                            if (line.startsWith('**') && line.endsWith('**')) {
-                              return <p key={i} className="font-semibold mt-2 first:mt-0">{line.replace(/\*\*/g, '')}</p>;
-                            }
-                            if (line.startsWith('*') && line.endsWith('*') && !line.startsWith('**')) {
-                              return <p key={i} className="text-muted-foreground italic text-xs mt-2">{line.replace(/\*/g, '')}</p>;
-                            }
-                            if (line.startsWith('• ')) {
-                              return <p key={i} className="ml-2">{line}</p>;
-                            }
-                            return <p key={i}>{line}</p>;
-                          })}
+                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                          <ReactMarkdown>{message.content}</ReactMarkdown>
                         </div>
                       </div>
                       {message.role === 'user' && (
@@ -323,7 +413,7 @@ export const ClinicalCopilot: React.FC = () => {
                     </div>
                   ))}
 
-                  {isTyping && (
+                  {isTyping && messages[messages.length - 1]?.role !== 'assistant' && (
                     <div className="flex gap-3">
                       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                         <Bot className="h-4 w-4 text-primary" />
@@ -348,7 +438,7 @@ export const ClinicalCopilot: React.FC = () => {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Ask about this screen..."
+                    placeholder="Ask about Peerbridge Health, ECG monitoring, or this screen..."
                     className="min-h-[44px] max-h-[120px] resize-none text-sm"
                     rows={1}
                   />
