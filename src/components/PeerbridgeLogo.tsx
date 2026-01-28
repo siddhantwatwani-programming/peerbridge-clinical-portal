@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface PeerbridgeLogoProps {
   size?: 'sm' | 'md' | 'lg';
@@ -54,10 +55,10 @@ export const PeerbridgeLogo: React.FC<PeerbridgeLogoProps> = ({
       
       {showText && (
         <div className="flex flex-col">
-          <span className={`font-bold tracking-tight text-primary ${textSizeClasses[size]}`}>
+          <span className={cn("font-bold tracking-tight", textSizeClasses[size], "text-primary-foreground")}>
             PEERBRIDGE
           </span>
-          <span className="text-xs tracking-[0.3em] text-muted-foreground uppercase -mt-0.5">
+          <span className="text-xs tracking-[0.3em] text-primary-foreground/60 uppercase -mt-0.5">
             Health
           </span>
         </div>

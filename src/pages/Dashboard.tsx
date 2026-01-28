@@ -1,113 +1,180 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
   Filter, 
   Plus,
-  FileText,
-  Clock,
-  Send
+  ArrowUpDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { PatientSummaryCard } from '@/components/dashboard/PatientSummaryCard';
-import { FindingsSummary } from '@/components/dashboard/FindingsSummary';
-import { AIAssistant } from '@/components/dashboard/AIAssistant';
-import { ActiveReportsTable } from '@/components/dashboard/ActiveReportsTable';
-import { TransmissionsTable } from '@/components/dashboard/TransmissionsTable';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ActiveEventsTable } from '@/components/dashboard/ActiveEventsTable';
+import { ActiveStudiesTable } from '@/components/dashboard/ActiveStudiesTable';
+
+interface Report {
+  id: string;
+  patient: string;
+  studyType: string;
+  startDate: string;
+}
+
+const reports: Report[] = [
+  { id: '1', patient: 'Mike Kam', studyType: '7 Day XT Holter', startDate: '07/08/2025' },
+  { id: '2', patient: 'Ravii Choudhary', studyType: '7 Day XT Holter', startDate: '07/29/2025' },
+];
 
 const Dashboard: React.FC = () => {
-  const [selectedPatient, setSelectedPatient] = useState<string | null>('mike-kam');
-  const [showInterpretation, setShowInterpretation] = useState(false);
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('reports');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const getSearchPlaceholder = () => {
+    switch (activeTab) {
+      case 'reports': return 'Search reports';
+      case 'events': return 'Search events';
+      case 'studies': return 'Search studies';
+      default: return 'Search...';
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+      {/* Top Filters Row */}
+      <div className="flex items-center gap-4">
+        <div className="flex-1 relative max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="System All...."
+            className="input-medical w-full pl-10"
+          />
+        </div>
+        <Button variant="outline" className="gap-2">
+          <Filter className="h-4 w-4" />
+          Filter by Physician (0)
+        </Button>
+        <div className="flex-1" />
         <Button variant="accent" className="gap-2">
           <Plus className="h-4 w-4" />
           Register New Study
         </Button>
       </div>
 
-      {/* Filters and Search */}
-      <div className="flex items-center gap-4">
-        <Button variant="outline" className="gap-2">
-          <Filter className="h-4 w-4" />
-          Filter by Physician (0)
-        </Button>
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search all"
-            className="input-medical w-full pl-10"
-          />
-        </div>
-      </div>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start gap-4 h-auto p-0">
+          <TabsTrigger 
+            value="reports" 
+            className="data-[state=active]:border-b-2 data-[state=active]:border-accent data-[state=active]:text-accent rounded-none bg-transparent px-0 pb-3 text-muted-foreground data-[state=active]:shadow-none"
+          >
+            Active Reports
+          </TabsTrigger>
+          <TabsTrigger 
+            value="events"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-accent data-[state=active]:text-accent rounded-none bg-transparent px-0 pb-3 text-muted-foreground data-[state=active]:shadow-none"
+          >
+            Active Events
+          </TabsTrigger>
+          <TabsTrigger 
+            value="studies"
+            className="data-[state=active]:border-b-2 data-[state=active]:border-accent data-[state=active]:text-accent rounded-none bg-transparent px-0 pb-3 text-muted-foreground data-[state=active]:shadow-none"
+          >
+            Active Studies
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Main Content - Two Column Layout for Overview */}
-      {!showInterpretation ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Active Reports */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <FileText className="h-5 w-5 text-accent" />
-                Active Reports
-              </h2>
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search reports"
-                  className="input-medical w-full pl-10 py-2 text-sm"
-                />
+        {/* Tab Content */}
+        <div className="mt-6">
+          {/* Section Header */}
+          <div className="flex items-center gap-4 mb-4">
+            <h2 className="text-xl font-semibold text-foreground">
+              {activeTab === 'reports' && 'Active Reports'}
+              {activeTab === 'events' && 'Active Events'}
+              {activeTab === 'studies' && 'Active Studies'}
+            </h2>
+            <div className="flex-1 relative max-w-lg">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder={getSearchPlaceholder()}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="input-medical w-full pl-10 py-2"
+              />
+            </div>
+          </div>
+
+          <TabsContent value="reports" className="mt-0">
+            <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/30">
+                      <th className="text-left p-4 text-sm font-medium text-muted-foreground">
+                        <button className="flex items-center gap-1 hover:text-foreground transition-colors">
+                          PATIENT
+                          <ArrowUpDown className="h-3 w-3" />
+                        </button>
+                      </th>
+                      <th className="text-left p-4 text-sm font-medium text-muted-foreground">
+                        <button className="flex items-center gap-1 hover:text-foreground transition-colors">
+                          STUDY TYPE
+                          <ArrowUpDown className="h-3 w-3" />
+                        </button>
+                      </th>
+                      <th className="text-left p-4 text-sm font-medium text-muted-foreground">
+                        <button className="flex items-center gap-1 hover:text-foreground transition-colors">
+                          STUDY BEGIN DATE
+                          <ArrowUpDown className="h-3 w-3" />
+                        </button>
+                      </th>
+                      <th className="text-right p-4 text-sm font-medium text-muted-foreground">
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reports.map((report) => (
+                      <tr key={report.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
+                        <td className="p-4 text-sm font-medium text-primary">
+                          {report.patient}
+                        </td>
+                        <td className="p-4 text-sm text-foreground">
+                          {report.studyType}
+                        </td>
+                        <td className="p-4 text-sm text-muted-foreground">
+                          {report.startDate}
+                        </td>
+                        <td className="p-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button 
+                              variant="accent" 
+                              size="sm"
+                              onClick={() => navigate('/interpretation')}
+                            >
+                              Preview Report
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              Send to history
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
-            <ActiveReportsTable onPreviewReport={() => setShowInterpretation(true)} />
-          </div>
+          </TabsContent>
 
-          {/* Patient Transmissions */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <Clock className="h-5 w-5 text-accent" />
-                Patient Transmissions
-              </h2>
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search events"
-                  className="input-medical w-full pl-10 py-2 text-sm"
-                />
-              </div>
-            </div>
-            <TransmissionsTable onPreviewReport={() => setShowInterpretation(true)} />
-          </div>
+          <TabsContent value="events" className="mt-0">
+            <ActiveEventsTable />
+          </TabsContent>
+
+          <TabsContent value="studies" className="mt-0">
+            <ActiveStudiesTable />
+          </TabsContent>
         </div>
-      ) : (
-        /* 3-Column Interpretation Layout */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column - Patient Summary */}
-          <div className="lg:col-span-3">
-            <PatientSummaryCard 
-              patientId={selectedPatient || 'mike-kam'} 
-              onBack={() => setShowInterpretation(false)}
-            />
-          </div>
-
-          {/* Middle Column - Findings Summary */}
-          <div className="lg:col-span-5">
-            <FindingsSummary />
-          </div>
-
-          {/* Right Column - AI Assistant */}
-          <div className="lg:col-span-4">
-            <AIAssistant />
-          </div>
-        </div>
-      )}
+      </Tabs>
     </div>
   );
 };
