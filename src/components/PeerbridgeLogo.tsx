@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import peerbridgeLogo from '@/assets/peerbridge-logo.jpg';
-import peerbridgeIcon from '@/assets/peerbridge-icon.png';
+import peerbridgeIcon from '@/assets/peerbridge-icon-new.png';
 
 interface PeerbridgeLogoProps {
   size?: 'sm' | 'md' | 'lg';
