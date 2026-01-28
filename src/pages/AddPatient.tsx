@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar } from 'lucide-react';
+import { Calendar, Plus, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,15 +12,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
 const AddPatient: React.FC = () => {
   const navigate = useNavigate();
   const [noCellPhone, setNoCellPhone] = useState(false);
   const [differentResponsibleParty, setDifferentResponsibleParty] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [patientData, setPatientData] = useState({ firstName: '', lastName: '', mrn: '' });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const firstName = (form.elements.namedItem('firstName') as HTMLInputElement)?.value || '';
+    const lastName = (form.elements.namedItem('lastName') as HTMLInputElement)?.value || '';
+    const mrn = (form.elements.namedItem('mrn') as HTMLInputElement)?.value || '';
+    
+    setPatientData({ firstName, lastName, mrn });
+    setShowSuccessModal(true);
+  };
+
+  const handleCreateOrder = () => {
+    const { firstName, lastName, mrn } = patientData;
+    navigate(`/patients/create-order?patient=${encodeURIComponent(firstName + ' ' + lastName)}&mrn=${mrn}`);
+  };
+
+  const handleGoToPatients = () => {
     toast.success('Patient registered successfully');
     navigate('/patients');
   };
@@ -332,6 +356,42 @@ const AddPatient: React.FC = () => {
           </Button>
         </div>
       </form>
+
+      {/* Success Modal - Direct path to Create Order */}
+      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-success">
+              <div className="h-8 w-8 rounded-full bg-success/10 flex items-center justify-center">
+                <Plus className="h-4 w-4 text-success" />
+              </div>
+              Patient Registered Successfully
+            </DialogTitle>
+            <DialogDescription>
+              <span className="font-medium text-foreground">{patientData.firstName} {patientData.lastName}</span> has been added to the system. What would you like to do next?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex flex-col gap-3 mt-4">
+            <Button 
+              variant="accent" 
+              className="w-full gap-2" 
+              onClick={handleCreateOrder}
+            >
+              <Plus className="h-4 w-4" />
+              Create Order & Assign Device
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full gap-2" 
+              onClick={handleGoToPatients}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Return to Patients List
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
