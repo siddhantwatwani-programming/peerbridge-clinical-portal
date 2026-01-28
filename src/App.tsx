@@ -15,6 +15,7 @@ import InventoryDevices from "./pages/InventoryDevices";
 import DeviceShipments from "./pages/DeviceShipments";
 import Reports from "./pages/Reports";
 import Research from "./pages/Research";
+import PatientTransmissions from "./pages/PatientTransmissions";
 import { SidebarLayout } from "./components/SidebarLayout";
 import NotFound from "./pages/NotFound";
 
@@ -44,7 +45,8 @@ const App = () => (
             <Route path="/inventory/shipments" element={<DeviceShipments />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/research" element={<Research />} />
-            <Route path="/events" element={<Dashboard />} />
+            <Route path="/events" element={<PatientTransmissions />} />
+            <Route path="/transmissions" element={<PatientTransmissions />} />
             <Route path="/transmissions" element={<NursePulse />} />
             <Route path="/studies" element={<Dashboard />} />
             <Route path="/settings" element={<Dashboard />} />
