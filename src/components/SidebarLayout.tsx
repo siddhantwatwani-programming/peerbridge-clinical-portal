@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from '@/components/Sidebar';
 import { TopHeader } from '@/components/TopHeader';
+import { ClinicalCopilot } from '@/components/ClinicalCopilot';
 
 export const SidebarLayout: React.FC = () => {
   return (
@@ -13,6 +14,7 @@ export const SidebarLayout: React.FC = () => {
           <Outlet />
         </main>
       </div>
+      <ClinicalCopilot />
     </div>
   );
 };
