@@ -39,7 +39,7 @@ const navItems: NavItem[] = [
   },
   { label: 'Reports', href: '/reports', icon: FileText },
   { label: 'Research', href: '/research', icon: FlaskConical },
-  { label: 'Events', href: '/events', icon: Calendar, badge: 3 },
+  { label: 'Patient Transmissions', href: '/events', icon: Calendar, badge: 3 },
   { label: 'Studies', href: '/studies', icon: BookOpen, badge: 246 },
   { label: 'Site Settings', href: '/settings', icon: Settings },
 ];
