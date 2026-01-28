@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ActiveEventsTable } from '@/components/dashboard/ActiveEventsTable';
 import { ActiveStudiesTable } from '@/components/dashboard/ActiveStudiesTable';
 import { PDFPreviewModal } from '@/components/dashboard/PDFPreviewModal';
+import { RegisterStudyModal } from '@/components/dashboard/RegisterStudyModal';
 
 interface Report {
   id: string;
@@ -28,6 +29,7 @@ const Dashboard: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [isRegisterStudyOpen, setIsRegisterStudyOpen] = useState(false);
 
   const getSearchPlaceholder = () => {
     switch (activeTab) {
@@ -60,7 +62,7 @@ const Dashboard: React.FC = () => {
           Filter by Physician (0)
         </Button>
         <div className="flex-1" />
-        <Button variant="accent" className="gap-2">
+        <Button variant="accent" className="gap-2" onClick={() => setIsRegisterStudyOpen(true)}>
           <Plus className="h-4 w-4" />
           Register New Study
         </Button>
@@ -188,6 +190,12 @@ const Dashboard: React.FC = () => {
         onClose={() => setIsPdfModalOpen(false)}
         patientName={selectedReport?.patient || ''}
         studyType={selectedReport?.studyType || ''}
+      />
+
+      {/* Register New Study Modal */}
+      <RegisterStudyModal 
+        isOpen={isRegisterStudyOpen}
+        onClose={() => setIsRegisterStudyOpen(false)}
       />
     </div>
   );
