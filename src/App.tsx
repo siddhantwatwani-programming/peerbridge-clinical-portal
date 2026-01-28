@@ -9,6 +9,7 @@ import NursePulse from "./pages/NursePulse";
 import Interpretation from "./pages/Interpretation";
 import Patients from "./pages/Patients";
 import AddPatient from "./pages/AddPatient";
+import CreateOrder from "./pages/CreateOrder";
 import Users from "./pages/Users";
 import AddUser from "./pages/AddUser";
 import InventoryDevices from "./pages/InventoryDevices";
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/interpretation" element={<Interpretation />} />
             <Route path="/patients" element={<Patients />} />
             <Route path="/patients/add" element={<AddPatient />} />
+            <Route path="/patients/create-order" element={<CreateOrder />} />
             <Route path="/users" element={<Users />} />
             <Route path="/users/add" element={<AddUser />} />
             <Route path="/inventory" element={<InventoryDevices />} />

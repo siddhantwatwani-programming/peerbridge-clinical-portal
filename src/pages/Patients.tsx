@@ -126,6 +126,7 @@ const Patients: React.FC = () => {
                       variant="ghost" 
                       size="icon" 
                       className="h-8 w-8 text-accent hover:text-accent hover:bg-accent/10"
+                      onClick={() => navigate(`/patients/create-order?patient=${encodeURIComponent(patient.firstName + ' ' + patient.lastName)}&mrn=${patient.mrn}`)}
                     >
                       <Plus className="h-5 w-5" />
                     </Button>
