@@ -7,7 +7,9 @@ import {
   Minimize2,
   Maximize2,
   Bot,
-  User
+  User,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,6 +17,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
+import peerbridgeIcon from '@/assets/peerbridge-icon-new.png';
 
 interface Message {
   id: string;
@@ -206,13 +209,14 @@ async function streamChat({
 export const ClinicalCopilot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isButtonCollapsed, setIsButtonCollapsed] = useState(false);
+  const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const location = useLocation();
-
   const pageContext = getPageContext(location.pathname);
 
   // Initialize with welcome message when opened
@@ -313,14 +317,45 @@ I'm here to help you navigate the **${pageContext.pageName}** and provide insigh
     <>
       {/* Floating Button */}
       {!isOpen && (
-        <button
-          onClick={handleOpen}
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group"
-          aria-label="Open PeerBridge AI"
-        >
-          <HeartPulse className="h-5 w-5 animate-[pulse_1s_ease-in-out_infinite]" />
-          <span className="font-medium">PeerBridge AI</span>
-        </button>
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2">
+          {/* Collapse/Expand Toggle */}
+          <button
+            onClick={() => setIsButtonCollapsed(!isButtonCollapsed)}
+            className="p-2 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground shadow-md transition-all duration-200 hover:scale-105"
+            aria-label={isButtonCollapsed ? "Expand PeerBridge AI" : "Collapse PeerBridge AI"}
+          >
+            {isButtonCollapsed ? (
+              <ChevronLeft className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </button>
+          
+          {/* Main AI Button */}
+          <button
+            onClick={handleOpen}
+            onMouseEnter={() => setIsButtonHovered(true)}
+            onMouseLeave={() => setIsButtonHovered(false)}
+            className={cn(
+              "flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group",
+              isButtonCollapsed && !isButtonHovered ? "p-3" : "px-4 py-3"
+            )}
+            aria-label="Open PeerBridge AI"
+          >
+            {isButtonCollapsed && !isButtonHovered ? (
+              <img 
+                src={peerbridgeIcon} 
+                alt="PeerBridge" 
+                className="h-6 w-6 rounded-full object-contain"
+              />
+            ) : (
+              <>
+                <HeartPulse className="h-5 w-5 animate-[pulse_1s_ease-in-out_infinite]" />
+                <span className="font-medium whitespace-nowrap">PeerBridge AI</span>
+              </>
+            )}
+          </button>
+        </div>
       )}
 
       {/* Chat Panel */}
