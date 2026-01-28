@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
   Filter, 
@@ -10,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ActiveEventsTable } from '@/components/dashboard/ActiveEventsTable';
 import { ActiveStudiesTable } from '@/components/dashboard/ActiveStudiesTable';
+import { PDFPreviewModal } from '@/components/dashboard/PDFPreviewModal';
 
 interface Report {
   id: string;
@@ -24,9 +24,10 @@ const reports: Report[] = [
 ];
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('reports');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
 
   const getSearchPlaceholder = () => {
     switch (activeTab) {
@@ -35,6 +36,11 @@ const Dashboard: React.FC = () => {
       case 'studies': return 'Search studies';
       default: return 'Search...';
     }
+  };
+
+  const handlePreviewReport = (report: Report) => {
+    setSelectedReport(report);
+    setIsPdfModalOpen(true);
   };
 
   return (
@@ -149,7 +155,7 @@ const Dashboard: React.FC = () => {
                             <Button 
                               variant="accent" 
                               size="sm"
-                              onClick={() => navigate('/interpretation')}
+                              onClick={() => handlePreviewReport(report)}
                             >
                               Preview Report
                             </Button>
@@ -175,6 +181,14 @@ const Dashboard: React.FC = () => {
           </TabsContent>
         </div>
       </Tabs>
+
+      {/* PDF Preview Modal */}
+      <PDFPreviewModal 
+        isOpen={isPdfModalOpen}
+        onClose={() => setIsPdfModalOpen(false)}
+        patientName={selectedReport?.patient || ''}
+        studyType={selectedReport?.studyType || ''}
+      />
     </div>
   );
 };
