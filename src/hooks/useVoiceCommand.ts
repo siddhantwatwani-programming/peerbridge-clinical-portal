@@ -65,9 +65,6 @@ export interface UseVoiceCommandReturn {
   toggleListening: () => void;
 }
 
-// Flag to track if we should auto-restart
-let shouldAutoRestart = false;
-
 export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceCommandReturn {
   const {
     onTranscript,
@@ -79,25 +76,34 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const shouldAutoRestartRef = useRef(false);
+  
+  // Store callbacks in refs to avoid effect re-runs
+  const onTranscriptRef = useRef(onTranscript);
+  const onErrorRef = useRef(onError);
+  
+  // Update refs synchronously during render
+  onTranscriptRef.current = onTranscript;
+  onErrorRef.current = onError;
 
   const isSupported = typeof window !== 'undefined' && 
     ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
-  // Initialize recognition
+  // Initialize recognition - only depends on stable values
   useEffect(() => {
     if (!isSupported) return;
 
     const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognitionRef.current = new SpeechRecognitionClass();
-    recognitionRef.current.continuous = continuous;
-    recognitionRef.current.interimResults = true;
-    recognitionRef.current.lang = language;
+    const recognition = new SpeechRecognitionClass();
+    recognition.continuous = continuous;
+    recognition.interimResults = true;
+    recognition.lang = language;
 
-    recognitionRef.current.onstart = () => {
+    recognition.onstart = () => {
       setIsListening(true);
     };
 
-    recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       let interimTranscript = '';
       let finalTranscript = '';
 
@@ -113,34 +119,33 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
       const currentTranscript = finalTranscript || interimTranscript;
       setTranscript(currentTranscript);
       
-      if (finalTranscript && onTranscript) {
-        onTranscript(finalTranscript, true);
-      } else if (interimTranscript && onTranscript) {
-        onTranscript(interimTranscript, false);
+      // Use refs for callbacks
+      if (finalTranscript && onTranscriptRef.current) {
+        onTranscriptRef.current(finalTranscript, true);
+      } else if (interimTranscript && onTranscriptRef.current) {
+        onTranscriptRef.current(interimTranscript, false);
       }
     };
 
-    recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.log('Speech recognition error:', event.error);
       
       // Don't treat 'aborted' or 'no-speech' as fatal errors
       if (event.error === 'aborted' || event.error === 'no-speech') {
-        // Will auto-restart via onend if shouldAutoRestart is true
         return;
       }
       
       setIsListening(false);
-      shouldAutoRestart = false;
-      if (onError) {
-        onError(event.error);
+      shouldAutoRestartRef.current = false;
+      if (onErrorRef.current) {
+        onErrorRef.current(event.error);
       }
     };
 
-    recognitionRef.current.onend = () => {
-      // Auto-restart if we should still be listening
-      if (shouldAutoRestart && recognitionRef.current) {
+    recognition.onend = () => {
+      if (shouldAutoRestartRef.current) {
         setTimeout(() => {
-          if (shouldAutoRestart && recognitionRef.current) {
+          if (shouldAutoRestartRef.current && recognitionRef.current) {
             try {
               recognitionRef.current.start();
             } catch (e) {
@@ -154,18 +159,19 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
       }
     };
 
+    recognitionRef.current = recognition;
+
     return () => {
-      shouldAutoRestart = false;
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
+      shouldAutoRestartRef.current = false;
+      recognition.abort();
+      recognitionRef.current = null;
     };
-  }, [isSupported, continuous, language, onTranscript, onError]);
+  }, [isSupported, continuous, language]);
 
   const startListening = useCallback(() => {
     if (!recognitionRef.current || isListening) return;
     setTranscript('');
-    shouldAutoRestart = true;
+    shouldAutoRestartRef.current = true;
     try {
       recognitionRef.current.start();
     } catch (error) {
@@ -174,7 +180,7 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
   }, [isListening]);
 
   const stopListening = useCallback(() => {
-    shouldAutoRestart = false;
+    shouldAutoRestartRef.current = false;
     if (!recognitionRef.current) return;
     try {
       recognitionRef.current.stop();
