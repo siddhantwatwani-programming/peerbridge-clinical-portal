@@ -75,23 +75,21 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
 
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
+  
+  // Use refs to store mutable values
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const shouldRestartRef = useRef(false);
-  const onTranscriptRef = useRef(onTranscript);
-  const onErrorRef = useRef(onError);
-
-  // Keep refs up to date
-  useEffect(() => {
-    onTranscriptRef.current = onTranscript;
-    onErrorRef.current = onError;
-  }, [onTranscript, onError]);
+  const callbacksRef = useRef({ onTranscript, onError });
+  
+  // Update callbacks ref on each render (no useEffect needed)
+  callbacksRef.current = { onTranscript, onError };
 
   const isSupported = typeof window !== 'undefined' && 
     ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
-  // Create recognition instance
-  const createRecognition = useCallback((): SpeechRecognition | null => {
-    if (!isSupported) return null;
+  // Initialize recognition once
+  useEffect(() => {
+    if (!isSupported) return;
 
     const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognitionClass();
@@ -120,22 +118,24 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
       const currentTranscript = finalTranscript || interimTranscript;
       setTranscript(currentTranscript);
       
-      if (finalTranscript && onTranscriptRef.current) {
-        onTranscriptRef.current(finalTranscript, true);
-      } else if (interimTranscript && onTranscriptRef.current) {
-        onTranscriptRef.current(interimTranscript, false);
+      if (finalTranscript && callbacksRef.current.onTranscript) {
+        callbacksRef.current.onTranscript(finalTranscript, true);
+      } else if (interimTranscript && callbacksRef.current.onTranscript) {
+        callbacksRef.current.onTranscript(interimTranscript, false);
       }
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.log('Speech recognition error:', event.error);
       
+      // Don't treat 'aborted' as fatal - it happens when stopping
       if (event.error === 'aborted') {
         return;
       }
       
+      // Handle 'no-speech' by auto-restarting if still in listening mode
       if (event.error === 'no-speech') {
-        if (shouldRestartRef.current && recognitionRef.current) {
+        if (shouldRestartRef.current) {
           setTimeout(() => {
             if (shouldRestartRef.current && recognitionRef.current) {
               try {
@@ -149,16 +149,18 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
         return;
       }
       
+      // Report actual errors
       setIsListening(false);
       shouldRestartRef.current = false;
-      if (onErrorRef.current) {
-        onErrorRef.current(event.error);
+      if (callbacksRef.current.onError) {
+        callbacksRef.current.onError(event.error);
       }
     };
 
     recognition.onend = () => {
       console.log('Speech recognition ended, shouldRestart:', shouldRestartRef.current);
       
+      // Auto-restart if we should still be listening
       if (shouldRestartRef.current) {
         setTimeout(() => {
           if (shouldRestartRef.current && recognitionRef.current) {
@@ -166,7 +168,7 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
               console.log('Auto-restarting speech recognition...');
               recognitionRef.current.start();
             } catch (e) {
-              console.log('Auto-restart failed, will retry on next interaction');
+              console.log('Auto-restart failed:', e);
             }
           }
         }, 100);
@@ -175,49 +177,47 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
       }
     };
 
-    return recognition;
-  }, [isSupported, continuous, language]);
+    recognitionRef.current = recognition;
 
-  // Cleanup on unmount
-  useEffect(() => {
     return () => {
       shouldRestartRef.current = false;
       if (recognitionRef.current) {
         try {
           recognitionRef.current.abort();
         } catch (e) {
-          // Ignore
+          // Ignore cleanup errors
         }
       }
     };
-  }, []);
+  }, [isSupported, continuous, language]);
 
   const startListening = useCallback(() => {
-    if (isListening) return;
+    if (!recognitionRef.current || isListening) return;
     
     setTranscript('');
     shouldRestartRef.current = true;
     
-    if (!recognitionRef.current) {
-      recognitionRef.current = createRecognition();
-    }
-    
-    if (recognitionRef.current) {
+    try {
+      recognitionRef.current.start();
+    } catch (error) {
+      console.log('Start failed:', error);
+      // If already running, stop and restart
       try {
-        recognitionRef.current.start();
-      } catch (error) {
-        console.log('Start failed, recreating recognition:', error);
-        recognitionRef.current = createRecognition();
-        if (recognitionRef.current) {
-          try {
-            recognitionRef.current.start();
-          } catch (e) {
-            console.error('Retry start failed:', e);
+        recognitionRef.current.stop();
+        setTimeout(() => {
+          if (recognitionRef.current && shouldRestartRef.current) {
+            try {
+              recognitionRef.current.start();
+            } catch (e) {
+              console.error('Retry start failed:', e);
+            }
           }
-        }
+        }, 100);
+      } catch (e) {
+        console.error('Stop failed:', e);
       }
     }
-  }, [isListening, createRecognition]);
+  }, [isListening]);
 
   const stopListening = useCallback(() => {
     shouldRestartRef.current = false;
