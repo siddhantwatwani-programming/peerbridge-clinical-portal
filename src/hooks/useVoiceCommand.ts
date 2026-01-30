@@ -77,13 +77,20 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
   const [transcript, setTranscript] = useState('');
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const shouldRestartRef = useRef(false);
-  const isInitializedRef = useRef(false);
+  const onTranscriptRef = useRef(onTranscript);
+  const onErrorRef = useRef(onError);
+
+  // Keep refs up to date
+  useEffect(() => {
+    onTranscriptRef.current = onTranscript;
+    onErrorRef.current = onError;
+  }, [onTranscript, onError]);
 
   const isSupported = typeof window !== 'undefined' && 
     ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
-  // Create and configure recognition instance
-  const createRecognition = useCallback(() => {
+  // Create recognition instance
+  const createRecognition = useCallback((): SpeechRecognition | null => {
     if (!isSupported) return null;
 
     const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -91,19 +98,6 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
     recognition.continuous = continuous;
     recognition.interimResults = true;
     recognition.lang = language;
-
-    return recognition;
-  }, [isSupported, continuous, language]);
-
-  // Start recognition with retry logic
-  const startRecognition = useCallback(() => {
-    if (!recognitionRef.current) {
-      recognitionRef.current = createRecognition();
-    }
-    
-    if (!recognitionRef.current) return;
-
-    const recognition = recognitionRef.current;
 
     recognition.onstart = () => {
       console.log('Speech recognition started');
@@ -126,25 +120,22 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
       const currentTranscript = finalTranscript || interimTranscript;
       setTranscript(currentTranscript);
       
-      if (finalTranscript && onTranscript) {
-        onTranscript(finalTranscript, true);
-      } else if (interimTranscript && onTranscript) {
-        onTranscript(interimTranscript, false);
+      if (finalTranscript && onTranscriptRef.current) {
+        onTranscriptRef.current(finalTranscript, true);
+      } else if (interimTranscript && onTranscriptRef.current) {
+        onTranscriptRef.current(interimTranscript, false);
       }
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.log('Speech recognition error:', event.error);
       
-      // Don't treat 'aborted' or 'no-speech' as fatal errors
       if (event.error === 'aborted') {
-        // Aborted is expected when stopping, just restart if needed
         return;
       }
       
       if (event.error === 'no-speech') {
-        // No speech detected, restart if still in listening mode
-        if (shouldRestartRef.current) {
+        if (shouldRestartRef.current && recognitionRef.current) {
           setTimeout(() => {
             if (shouldRestartRef.current && recognitionRef.current) {
               try {
@@ -158,18 +149,16 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
         return;
       }
       
-      // Report actual errors
       setIsListening(false);
       shouldRestartRef.current = false;
-      if (onError) {
-        onError(event.error);
+      if (onErrorRef.current) {
+        onErrorRef.current(event.error);
       }
     };
 
     recognition.onend = () => {
       console.log('Speech recognition ended, shouldRestart:', shouldRestartRef.current);
       
-      // Auto-restart if we should still be listening
       if (shouldRestartRef.current) {
         setTimeout(() => {
           if (shouldRestartRef.current && recognitionRef.current) {
@@ -177,12 +166,7 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
               console.log('Auto-restarting speech recognition...');
               recognitionRef.current.start();
             } catch (e) {
-              console.log('Auto-restart failed:', e);
-              // Create new instance and try again
-              recognitionRef.current = createRecognition();
-              if (recognitionRef.current) {
-                startRecognition();
-              }
+              console.log('Auto-restart failed, will retry on next interaction');
             }
           }
         }, 100);
@@ -191,25 +175,8 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
       }
     };
 
-    try {
-      recognition.start();
-    } catch (error) {
-      console.error('Failed to start recognition:', error);
-      // If already started, abort and retry
-      try {
-        recognition.abort();
-        setTimeout(() => {
-          try {
-            recognition.start();
-          } catch (e) {
-            console.error('Retry start failed:', e);
-          }
-        }, 100);
-      } catch (e) {
-        console.error('Abort failed:', e);
-      }
-    }
-  }, [createRecognition, onTranscript, onError]);
+    return recognition;
+  }, [isSupported, continuous, language]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -227,10 +194,30 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
 
   const startListening = useCallback(() => {
     if (isListening) return;
+    
     setTranscript('');
     shouldRestartRef.current = true;
-    startRecognition();
-  }, [isListening, startRecognition]);
+    
+    if (!recognitionRef.current) {
+      recognitionRef.current = createRecognition();
+    }
+    
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.start();
+      } catch (error) {
+        console.log('Start failed, recreating recognition:', error);
+        recognitionRef.current = createRecognition();
+        if (recognitionRef.current) {
+          try {
+            recognitionRef.current.start();
+          } catch (e) {
+            console.error('Retry start failed:', e);
+          }
+        }
+      }
+    }
+  }, [isListening, createRecognition]);
 
   const stopListening = useCallback(() => {
     shouldRestartRef.current = false;
