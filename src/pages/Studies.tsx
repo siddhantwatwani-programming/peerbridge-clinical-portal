@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Filter, FileText, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -65,6 +66,7 @@ const historicalStudiesData: Study[] = [
 const allDoctors = [...new Set([...activeStudiesData, ...historicalStudiesData].map(s => s.doctor))];
 
 const Studies: React.FC = () => {
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'active' | 'historical'>('active');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDoctors, setSelectedDoctors] = useState<string[]>([]);
@@ -72,6 +74,10 @@ const Studies: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+
+  const handleRowClick = (studyId: string) => {
+    navigate(`/studies/${studyId}`);
+  };
 
   const currentData = viewMode === 'active' ? activeStudiesData : historicalStudiesData;
 
@@ -356,7 +362,11 @@ const Studies: React.FC = () => {
               </TableRow>
             ) : (
               paginatedData.map((study) => (
-                <TableRow key={study.id} className="table-row-hover cursor-pointer">
+                <TableRow 
+                  key={study.id} 
+                  className="table-row-hover cursor-pointer"
+                  onClick={() => handleRowClick(study.id)}
+                >
                   <TableCell className="font-medium text-accent hover:underline">
                     {study.patient}
                   </TableCell>
