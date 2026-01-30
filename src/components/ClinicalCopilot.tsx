@@ -219,6 +219,64 @@ export const ClinicalCopilot: React.FC = () => {
   const location = useLocation();
   const pageContext = getPageContext(location.pathname);
 
+  // Drag state
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number } | null>(null);
+
+  // Handle mouse down for drag start
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Don't start drag if clicking on interactive elements
+    if ((e.target as HTMLElement).closest('button, input, textarea')) return;
+    
+    setIsDragging(true);
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      initialX: position.x,
+      initialY: position.y
+    };
+    e.preventDefault();
+  };
+
+  // Handle mouse move for dragging
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging || !dragRef.current) return;
+      
+      const deltaX = dragRef.current.startX - e.clientX;
+      const deltaY = dragRef.current.startY - e.clientY;
+      
+      // Calculate new position (we're using bottom-right positioning, so invert deltas)
+      const newX = dragRef.current.initialX + deltaX;
+      const newY = dragRef.current.initialY + deltaY;
+      
+      // Constrain to viewport
+      const maxX = window.innerWidth - 100;
+      const maxY = window.innerHeight - 100;
+      
+      setPosition({
+        x: Math.max(-window.innerWidth + 450, Math.min(maxX, newX)),
+        y: Math.max(-window.innerHeight + 650, Math.min(maxY, newY))
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      dragRef.current = null;
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
   // Initialize with welcome message when opened
   useEffect(() => {
     if (isOpen && messages.length === 0) {
@@ -317,7 +375,17 @@ I'm here to help you navigate the **${pageContext.pageName}** and provide insigh
     <>
       {/* Floating Button */}
       {!isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2">
+        <div 
+          className={cn(
+            "fixed z-50 flex items-center gap-2",
+            isDragging ? "cursor-grabbing" : "cursor-grab"
+          )}
+          style={{
+            bottom: `${24 + position.y}px`,
+            right: `${24 + position.x}px`,
+          }}
+          onMouseDown={handleMouseDown}
+        >
           {/* Collapse/Expand Toggle */}
           <button
             onClick={() => setIsButtonCollapsed(!isButtonCollapsed)}
@@ -362,17 +430,26 @@ I'm here to help you navigate the **${pageContext.pageName}** and provide insigh
       {isOpen && (
         <div
           className={cn(
-            "fixed z-50 bg-card border border-border rounded-xl shadow-2xl transition-all duration-300 flex flex-col",
+            "fixed z-50 bg-card border border-border rounded-xl shadow-2xl flex flex-col",
             isMinimized 
-              ? "bottom-6 right-6 w-72 h-14" 
-              : "bottom-6 right-6 w-[420px] h-[600px] max-h-[80vh]"
+              ? "w-72 h-14" 
+              : "w-[420px] h-[600px] max-h-[80vh]",
+            !isDragging && "transition-all duration-300"
           )}
           style={{
-            animation: 'scale-in 0.2s ease-out'
+            bottom: `${24 + position.y}px`,
+            right: `${24 + position.x}px`,
+            animation: !isDragging ? 'scale-in 0.2s ease-out' : undefined
           }}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-border bg-primary/5 rounded-t-xl">
+          {/* Header - Draggable */}
+          <div 
+            className={cn(
+              "flex items-center justify-between p-4 border-b border-border bg-primary/5 rounded-t-xl",
+              isDragging ? "cursor-grabbing" : "cursor-grab"
+            )}
+            onMouseDown={handleMouseDown}
+          >
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-accent">
                 <HeartPulse className="h-4 w-4 text-accent-foreground animate-[pulse_1s_ease-in-out_infinite]" />
