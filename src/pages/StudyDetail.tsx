@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Download, 
@@ -6,7 +6,8 @@ import {
   Building2, 
   Home, 
   X,
-  ChevronDown
+  ChevronDown,
+  Printer
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -27,14 +34,16 @@ import { cn } from '@/lib/utils';
 const mockStudyData = {
   id: '1',
   patientName: 'Mike Kam',
+  patientId: '23456',
   confirmationId: 'TKDP-3ZNO-9H2D',
   orderStatus: 'Ready To Start',
   orderType: 'clinic',
   studyType: '24 Hours Holter',
   serviceTagNumber: '4XQHZTVC6S4',
   orderDate: '01/27/2026 11:27 PM',
-  startDate: '01/27/2026 11:27 PM',
-  endDate: '01/28/2026 11:27 PM',
+  startDate: '01/27/2026 -11:27:00 PM',
+  endDate: '01/28/2026 -11:24:56 PM',
+  deviceUseByDate: '02/26/2026 -10:17:06 PM',
   diagnosisCodes: [
     { code: 'ZPD10', description: 'Secondary Diagnosis 3' }
   ],
@@ -94,6 +103,7 @@ const technicians = [
 const StudyDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const printRef = useRef<HTMLDivElement>(null);
 
   // Form state
   const [orderType, setOrderType] = useState(mockStudyData.orderType);
@@ -113,6 +123,9 @@ const StudyDetail: React.FC = () => {
   const [applicationTechnician, setApplicationTechnician] = useState(mockStudyData.applicationTechnician);
   const [referringPhysician, setReferringPhysician] = useState(mockStudyData.referringPhysician);
   const [notes, setNotes] = useState(mockStudyData.notes);
+  
+  // Modal state
+  const [showStudyDetailsModal, setShowStudyDetailsModal] = useState(false);
 
   const filteredDiagnosisCodes = availableDiagnosisCodes.filter(
     code => 
@@ -139,6 +152,43 @@ const StudyDetail: React.FC = () => {
     // TODO: Save logic
     console.log('Saving study...', { orderType, studyType, diagnosisCodes });
     navigate('/studies');
+  };
+
+  const handlePrintStudy = () => {
+    const printContent = `
+      <html>
+        <head>
+          <title>Study Details</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; }
+            h1 { font-size: 18px; margin-bottom: 30px; }
+            .row { display: flex; margin-bottom: 12px; }
+            .label { width: 180px; color: #666; font-size: 14px; }
+            .value { font-size: 14px; color: #333; }
+            .footer { margin-top: 20px; font-size: 10px; color: #999; }
+          </style>
+        </head>
+        <body>
+          <h1>Study Details</h1>
+          <div class="row"><span class="label">Patient Name</span><span class="value">${mockStudyData.patientName}</span></div>
+          <div class="row"><span class="label">Patient ID</span><span class="value">${mockStudyData.patientId}</span></div>
+          <div class="row"><span class="label">Confirmation ID</span><span class="value">${mockStudyData.confirmationId}</span></div>
+          <div class="row"><span class="label">Study</span><span class="value">${studyType}</span></div>
+          <div class="row"><span class="label">Start Date</span><span class="value">${startDate}</span></div>
+          <div class="row"><span class="label">End Date</span><span class="value">${endDate}</span></div>
+          <div class="row"><span class="label">Ordering Physician</span><span class="value">${orderingPhysician}</span></div>
+          <div class="row"><span class="label">Device ID</span><span class="value">${serviceTagNumber}</span></div>
+          <div class="row"><span class="label">Device Use by Date</span><span class="value">${mockStudyData.deviceUseByDate}</span></div>
+        </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.print();
+    }
   };
 
   return (
@@ -238,7 +288,11 @@ const StudyDetail: React.FC = () => {
           <p className="text-sm font-medium text-foreground">Order Status</p>
           <p className="text-sm text-muted-foreground">{mockStudyData.orderStatus}</p>
         </div>
-        <Button variant="outline" className="gap-2 text-accent border-accent hover:bg-accent/5">
+        <Button 
+          variant="outline" 
+          className="gap-2 text-accent border-accent hover:bg-accent/5"
+          onClick={() => setShowStudyDetailsModal(true)}
+        >
           <Download className="h-4 w-4" />
           Print
         </Button>
@@ -535,6 +589,63 @@ const StudyDetail: React.FC = () => {
           Edit Order
         </Button>
       </div>
+
+      {/* Study Details Modal */}
+      <Dialog open={showStudyDetailsModal} onOpenChange={setShowStudyDetailsModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">Study Details</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="flex justify-between py-2 border-b border-border">
+              <span className="text-muted-foreground">Patient Name</span>
+              <span className="font-medium text-foreground">{mockStudyData.patientName}</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-border">
+              <span className="text-muted-foreground">Patient ID</span>
+              <span className="font-medium text-foreground">{mockStudyData.patientId}</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-border">
+              <span className="text-muted-foreground">Confirmation ID</span>
+              <span className="font-medium text-foreground">{mockStudyData.confirmationId}</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-border">
+              <span className="text-muted-foreground">Study</span>
+              <span className="font-medium text-foreground">{studyType}</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-border">
+              <span className="text-muted-foreground">Start Date</span>
+              <span className="font-medium text-foreground">{startDate}</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-border">
+              <span className="text-muted-foreground">End Date</span>
+              <span className="font-medium text-foreground">{endDate}</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-border">
+              <span className="text-muted-foreground">Ordering Physician</span>
+              <span className="font-medium text-foreground">{orderingPhysician}</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-border">
+              <span className="text-muted-foreground">Device ID</span>
+              <span className="font-medium text-foreground">{serviceTagNumber}</span>
+            </div>
+            <div className="flex justify-between py-2">
+              <span className="text-muted-foreground">Device Use by Date</span>
+              <span className="font-medium text-foreground">{mockStudyData.deviceUseByDate}</span>
+            </div>
+          </div>
+
+          <div className="flex justify-center pt-4">
+            <Button 
+              onClick={handlePrintStudy}
+              className="bg-accent hover:bg-accent/90 text-accent-foreground"
+            >
+              Print Study
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
