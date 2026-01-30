@@ -36,7 +36,10 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Patients', href: '/patients', icon: Users },
-  { label: 'Users', href: '/users', icon: UserCircle },
+  { label: 'Studies', href: '/studies', icon: BookOpen, badge: 246 },
+  { label: 'Patient Transmissions', href: '/events', icon: Calendar, badge: 3 },
+  { label: 'Reports', href: '/reports', icon: FileText },
+  { label: 'Research', href: '/research', icon: FlaskConical },
   { 
     label: 'Inventory', 
     href: '/inventory',
@@ -46,11 +49,8 @@ const navItems: NavItem[] = [
       { label: 'Device Shipments', href: '/inventory/shipments' },
     ]
   },
-  { label: 'Reports', href: '/reports', icon: FileText },
-  { label: 'Research', href: '/research', icon: FlaskConical },
-  { label: 'Patient Transmissions', href: '/events', icon: Calendar, badge: 3 },
-  { label: 'Studies', href: '/studies', icon: BookOpen, badge: 246 },
   { label: 'Platform Analytics', href: '/analytics', icon: LayoutDashboard },
+  { label: 'Users', href: '/users', icon: UserCircle },
   { label: 'Site Settings', href: '/settings', icon: Settings },
 ];
 
