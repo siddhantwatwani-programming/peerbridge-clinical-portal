@@ -19,6 +19,7 @@ import Research from "./pages/Research";
 import PatientTransmissions from "./pages/PatientTransmissions";
 import PlatformAnalytics from "./pages/PlatformAnalytics";
 import Studies from "./pages/Studies";
+import StudyDetail from "./pages/StudyDetail";
 import { SidebarLayout } from "./components/SidebarLayout";
 import NotFound from "./pages/NotFound";
 
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/transmissions" element={<PatientTransmissions />} />
             <Route path="/transmissions" element={<NursePulse />} />
             <Route path="/studies" element={<Studies />} />
+            <Route path="/studies/:id" element={<StudyDetail />} />
             <Route path="/analytics" element={<PlatformAnalytics />} />
             <Route path="/settings" element={<Dashboard />} />
             <Route path="/admin" element={<Dashboard />} />
