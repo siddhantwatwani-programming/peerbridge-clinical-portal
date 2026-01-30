@@ -386,10 +386,18 @@ I'm here to help you navigate the **${pageContext.pageName}** and provide insigh
           }}
           onMouseDown={handleMouseDown}
         >
-          {/* Collapse/Expand Toggle */}
-          <button
-            onClick={() => setIsButtonCollapsed(!isButtonCollapsed)}
-            className="p-2 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground shadow-md transition-all duration-200 hover:scale-105"
+          {/* Collapse/Expand Toggle - also draggable */}
+          <div
+            className={cn(
+              "p-2 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground shadow-md transition-all duration-200 hover:scale-105",
+              isDragging ? "cursor-grabbing" : "cursor-grab"
+            )}
+            onClick={(e) => {
+              // Only toggle if it wasn't a drag
+              if (!isDragging) {
+                setIsButtonCollapsed(!isButtonCollapsed);
+              }
+            }}
             aria-label={isButtonCollapsed ? "Expand PeerBridge AI" : "Collapse PeerBridge AI"}
           >
             {isButtonCollapsed ? (
@@ -397,7 +405,7 @@ I'm here to help you navigate the **${pageContext.pageName}** and provide insigh
             ) : (
               <ChevronRight className="h-4 w-4" />
             )}
-          </button>
+          </div>
           
           {/* Main AI Button */}
           <button
