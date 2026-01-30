@@ -65,6 +65,9 @@ export interface UseVoiceCommandReturn {
   toggleListening: () => void;
 }
 
+// Flag to track if we should auto-restart
+let shouldAutoRestart = false;
+
 export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceCommandReturn {
   const {
     onTranscript,
@@ -75,34 +78,26 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
 
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
-  
-  // Use refs to store mutable values
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const shouldRestartRef = useRef(false);
-  const callbacksRef = useRef({ onTranscript, onError });
-  
-  // Update callbacks ref on each render (no useEffect needed)
-  callbacksRef.current = { onTranscript, onError };
 
   const isSupported = typeof window !== 'undefined' && 
     ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
-  // Initialize recognition once
+  // Initialize recognition
   useEffect(() => {
     if (!isSupported) return;
 
     const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognitionClass();
-    recognition.continuous = continuous;
-    recognition.interimResults = true;
-    recognition.lang = language;
+    recognitionRef.current = new SpeechRecognitionClass();
+    recognitionRef.current.continuous = continuous;
+    recognitionRef.current.interimResults = true;
+    recognitionRef.current.lang = language;
 
-    recognition.onstart = () => {
-      console.log('Speech recognition started');
+    recognitionRef.current.onstart = () => {
       setIsListening(true);
     };
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
       let interimTranscript = '';
       let finalTranscript = '';
 
@@ -118,57 +113,39 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
       const currentTranscript = finalTranscript || interimTranscript;
       setTranscript(currentTranscript);
       
-      if (finalTranscript && callbacksRef.current.onTranscript) {
-        callbacksRef.current.onTranscript(finalTranscript, true);
-      } else if (interimTranscript && callbacksRef.current.onTranscript) {
-        callbacksRef.current.onTranscript(interimTranscript, false);
+      if (finalTranscript && onTranscript) {
+        onTranscript(finalTranscript, true);
+      } else if (interimTranscript && onTranscript) {
+        onTranscript(interimTranscript, false);
       }
     };
 
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+    recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.log('Speech recognition error:', event.error);
       
-      // Don't treat 'aborted' as fatal - it happens when stopping
-      if (event.error === 'aborted') {
+      // Don't treat 'aborted' or 'no-speech' as fatal errors
+      if (event.error === 'aborted' || event.error === 'no-speech') {
+        // Will auto-restart via onend if shouldAutoRestart is true
         return;
       }
       
-      // Handle 'no-speech' by auto-restarting if still in listening mode
-      if (event.error === 'no-speech') {
-        if (shouldRestartRef.current) {
-          setTimeout(() => {
-            if (shouldRestartRef.current && recognitionRef.current) {
-              try {
-                recognitionRef.current.start();
-              } catch (e) {
-                console.log('Restart after no-speech failed:', e);
-              }
-            }
-          }, 100);
-        }
-        return;
-      }
-      
-      // Report actual errors
       setIsListening(false);
-      shouldRestartRef.current = false;
-      if (callbacksRef.current.onError) {
-        callbacksRef.current.onError(event.error);
+      shouldAutoRestart = false;
+      if (onError) {
+        onError(event.error);
       }
     };
 
-    recognition.onend = () => {
-      console.log('Speech recognition ended, shouldRestart:', shouldRestartRef.current);
-      
+    recognitionRef.current.onend = () => {
       // Auto-restart if we should still be listening
-      if (shouldRestartRef.current) {
+      if (shouldAutoRestart && recognitionRef.current) {
         setTimeout(() => {
-          if (shouldRestartRef.current && recognitionRef.current) {
+          if (shouldAutoRestart && recognitionRef.current) {
             try {
-              console.log('Auto-restarting speech recognition...');
               recognitionRef.current.start();
             } catch (e) {
               console.log('Auto-restart failed:', e);
+              setIsListening(false);
             }
           }
         }, 100);
@@ -177,60 +154,32 @@ export function useVoiceCommand(options: UseVoiceCommandOptions = {}): UseVoiceC
       }
     };
 
-    recognitionRef.current = recognition;
-
     return () => {
-      shouldRestartRef.current = false;
+      shouldAutoRestart = false;
       if (recognitionRef.current) {
-        try {
-          recognitionRef.current.abort();
-        } catch (e) {
-          // Ignore cleanup errors
-        }
+        recognitionRef.current.abort();
       }
     };
-  }, [isSupported, continuous, language]);
+  }, [isSupported, continuous, language, onTranscript, onError]);
 
   const startListening = useCallback(() => {
     if (!recognitionRef.current || isListening) return;
-    
     setTranscript('');
-    shouldRestartRef.current = true;
-    
+    shouldAutoRestart = true;
     try {
       recognitionRef.current.start();
     } catch (error) {
-      console.log('Start failed:', error);
-      // If already running, stop and restart
-      try {
-        recognitionRef.current.stop();
-        setTimeout(() => {
-          if (recognitionRef.current && shouldRestartRef.current) {
-            try {
-              recognitionRef.current.start();
-            } catch (e) {
-              console.error('Retry start failed:', e);
-            }
-          }
-        }, 100);
-      } catch (e) {
-        console.error('Stop failed:', e);
-      }
+      console.log('Failed to start recognition:', error);
     }
   }, [isListening]);
 
   const stopListening = useCallback(() => {
-    shouldRestartRef.current = false;
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch (e) {
-        try {
-          recognitionRef.current.abort();
-        } catch (e2) {
-          // Ignore
-        }
-      }
+    shouldAutoRestart = false;
+    if (!recognitionRef.current) return;
+    try {
+      recognitionRef.current.stop();
+    } catch (e) {
+      // Ignore
     }
     setIsListening(false);
   }, []);
