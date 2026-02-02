@@ -19,33 +19,46 @@ const Login: React.FC = () => {
   const { toast } = useToast();
   const { signIn, signUp, isAuthenticated, isLoading: authLoading } = useAuth();
 
-  // Redirect if already authenticated (only on initial load, not during login)
+  // Redirect if already authenticated on initial page load
   useEffect(() => {
-    if (!authLoading && isAuthenticated && !isLoading) {
-      navigate('/dashboard');
+    if (!authLoading && isAuthenticated) {
+      navigate('/dashboard', { replace: true });
     }
-  }, [isAuthenticated, authLoading, navigate, isLoading]);
+  }, [isAuthenticated, authLoading, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    const { error } = await signIn(email, password);
+    try {
+      const { error } = await signIn(email, password);
 
-    if (error) {
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Authentication Failed",
+          description: error,
+        });
+        setIsLoading(false);
+      } else {
+        toast({
+          title: "Welcome back!",
+          description: "Successfully authenticated. Redirecting to dashboard...",
+        });
+        // Small delay to allow auth state to propagate, then navigate
+        setTimeout(() => {
+          setIsLoading(false);
+          navigate('/dashboard', { replace: true });
+        }, 500);
+      }
+    } catch (err) {
+      console.error('Sign in error:', err);
       toast({
         variant: "destructive",
         title: "Authentication Failed",
-        description: error,
+        description: "An unexpected error occurred",
       });
       setIsLoading(false);
-    } else {
-      toast({
-        title: "Welcome back!",
-        description: "Successfully authenticated. Redirecting to dashboard...",
-      });
-      setIsLoading(false);
-      navigate('/dashboard');
     }
   };
 
