@@ -19,12 +19,12 @@ const Login: React.FC = () => {
   const { toast } = useToast();
   const { signIn, signUp, isAuthenticated, isLoading: authLoading } = useAuth();
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated (only on initial load, not during login)
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
+    if (!authLoading && isAuthenticated && !isLoading) {
       navigate('/dashboard');
     }
-  }, [isAuthenticated, authLoading, navigate]);
+  }, [isAuthenticated, authLoading, navigate, isLoading]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
