@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { SiteProvider } from "@/contexts/SiteContext";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import NursePulse from "./pages/NursePulse";
@@ -28,42 +29,44 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<Login />} />
-          
-          {/* Protected routes with SidebarLayout */}
-          <Route element={<SidebarLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/nurse-pulse" element={<NursePulse />} />
-            <Route path="/interpretation" element={<Interpretation />} />
-            <Route path="/patients" element={<Patients />} />
-            <Route path="/patients/add" element={<AddPatient />} />
-            <Route path="/patients/create-order" element={<CreateOrder />} />
-            <Route path="/users" element={<Users />} />
-            <Route path="/users/add" element={<AddUser />} />
-            <Route path="/inventory" element={<InventoryDevices />} />
-            <Route path="/inventory/devices" element={<InventoryDevices />} />
-            <Route path="/inventory/shipments" element={<DeviceShipments />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/research" element={<Research />} />
-            <Route path="/events" element={<PatientTransmissions />} />
-            <Route path="/transmissions" element={<PatientTransmissions />} />
-            <Route path="/transmissions" element={<NursePulse />} />
-            <Route path="/studies" element={<Studies />} />
-            <Route path="/studies/:id" element={<StudyDetail />} />
-            <Route path="/analytics" element={<PlatformAnalytics />} />
-            <Route path="/settings" element={<Dashboard />} />
-            <Route path="/admin" element={<Dashboard />} />
-          </Route>
-          
-          {/* Catch-all */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <SiteProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Login />} />
+            
+            {/* Protected routes with SidebarLayout */}
+            <Route element={<SidebarLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/nurse-pulse" element={<NursePulse />} />
+              <Route path="/interpretation" element={<Interpretation />} />
+              <Route path="/patients" element={<Patients />} />
+              <Route path="/patients/add" element={<AddPatient />} />
+              <Route path="/patients/create-order" element={<CreateOrder />} />
+              <Route path="/users" element={<Users />} />
+              <Route path="/users/add" element={<AddUser />} />
+              <Route path="/inventory" element={<InventoryDevices />} />
+              <Route path="/inventory/devices" element={<InventoryDevices />} />
+              <Route path="/inventory/shipments" element={<DeviceShipments />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/research" element={<Research />} />
+              <Route path="/events" element={<PatientTransmissions />} />
+              <Route path="/transmissions" element={<PatientTransmissions />} />
+              <Route path="/transmissions" element={<NursePulse />} />
+              <Route path="/studies" element={<Studies />} />
+              <Route path="/studies/:id" element={<StudyDetail />} />
+              <Route path="/analytics" element={<PlatformAnalytics />} />
+              <Route path="/settings" element={<Dashboard />} />
+              <Route path="/admin" element={<Dashboard />} />
+            </Route>
+            
+            {/* Catch-all */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </SiteProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
