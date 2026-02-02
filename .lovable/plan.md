@@ -1,59 +1,41 @@
 
 
-## Create Demo Account
+## Assign Site Memberships to Existing Users
 
-I'll create a demo user account with the credentials you specified and pre-assign them to multiple sites for testing the site-switching functionality.
+Your existing users need site memberships to access the multi-clinic switching feature. I'll assign each doctor to different clinics with varied roles for testing.
 
-### Demo Account Details
-- **Email**: demo@peerbridge.health
-- **Password**: Demo2024!
-- **Site Access**: All 3 sites with different roles
+### Proposed Site Assignments
 
-### Site Assignments
+| Doctor | Email | Clinics & Roles |
+|--------|-------|-----------------|
+| Ravi | demo@yopmail.com | Dev Clinic (Admin), Metro Heart Center (Interpreter), Coastal Health Partners (Viewer) |
+| Raju | demo2@yopmail.com | Metro Heart Center (Admin), Coastal Health Partners (Interpreter) |
+| Raju | demo3@yomail.com | Coastal Health Partners (Admin) |
+| Mahesh | demo5@yopmail.com | Dev Clinic (Interpreter), Metro Heart Center (Viewer) |
 
-| Site | Role |
-|------|------|
-| Dev Clinic | Site Admin |
-| Metro Heart Center | Interpreter |
-| Coastal Health Partners | Viewer |
+### What This Enables
 
-This setup will let you test all permission levels and the site switcher across multiple clinics.
+After implementation, each doctor can:
+- Sign in with their existing password
+- See the site switcher in the header
+- Switch between their assigned clinics
+- View different role badges based on their access level
 
-### Implementation Steps
+### Technical Implementation
 
-1. **Enable email auto-confirm** - Configure authentication to skip email verification for easier testing
-
-2. **Add Sign Up functionality** - Update the Login page to include a registration form so the demo user can be created
-
-3. **Create a seed script** - Add an edge function or admin utility to:
-   - Create the demo user via Supabase Auth
-   - Insert site memberships for all 3 sites with varied roles
-
-### Technical Details
-
-**Auth Configuration Change:**
-- Enable `enable_confirmations = false` in auth settings to auto-confirm signups during development
-
-**Login Page Update:**
-- Add a tabbed interface with "Sign In" and "Sign Up" options
-- Sign Up form will use the existing `signUp` method from `useAuth` hook
-
-**Demo User Setup Flow:**
-After signup, an admin seed migration will insert the site memberships:
+**Database Migration:**
+Insert site_memberships records linking each user to their assigned sites with appropriate roles:
 
 ```sql
--- After user signs up, their profile is auto-created via trigger
--- Then insert memberships linking to each site with appropriate roles
 INSERT INTO site_memberships (user_id, site_id, role_id, is_active, accepted_at)
 VALUES 
-  (<user_id>, 'dev-clinic-id', 'site-admin-role-id', true, now()),
-  (<user_id>, 'metro-heart-id', 'interpreter-role-id', true, now()),
-  (<user_id>, 'coastal-health-id', 'viewer-role-id', true, now());
+  -- demo@yopmail.com assignments
+  ('user-id', 'dev-clinic-id', 'admin-role-id', true, now()),
+  ('user-id', 'metro-heart-id', 'interpreter-role-id', true, now()),
+  -- ... additional assignments
 ```
 
-### What You'll Be Able to Test
-- Sign in with demo credentials
-- Switch between 3 different clinic sites
-- See different role badges (Admin, Interpreter, Viewer)
-- Verify permission-based access controls
+### Login Credentials
+
+After approval, you can log in with any of these emails using the password you created during signup. If you forgot the password, I can help reset it.
 
