@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Lock, Eye, EyeOff, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import peerbridgeLogo from '@/assets/peerbridge-logo.jpg';
 
 const Login: React.FC = () => {
@@ -13,27 +14,35 @@ const Login: React.FC = () => {
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn, isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const { error } = await signIn(email, password);
 
-    if (email === 'admin' && password === 'admin') {
-      toast({
-        title: "Welcome back, Dr. Admin",
-        description: "Successfully authenticated. Redirecting to dashboard...",
-      });
-      setTimeout(() => navigate('/dashboard'), 500);
-    } else {
+    if (error) {
       toast({
         variant: "destructive",
         title: "Authentication Failed",
-        description: "Invalid clinical credentials. Please verify your email and password.",
+        description: error,
       });
+      setIsLoading(false);
+    } else {
+      toast({
+        title: "Welcome back!",
+        description: "Successfully authenticated. Redirecting to dashboard...",
+      });
+      setTimeout(() => navigate('/dashboard'), 500);
     }
-    setIsLoading(false);
   };
 
   return (
@@ -104,7 +113,7 @@ const Login: React.FC = () => {
                 <User className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 transition-colors duration-200 ${focusedField === 'email' ? 'text-accent' : 'text-slate-400'}`} />
                 <input
                   id="email"
-                  type="text"
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onFocus={() => setFocusedField('email')}
