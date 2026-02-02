@@ -92,7 +92,7 @@ export function useAuth(): UseAuthReturn {
 
   // Sign up
   const signUp = useCallback(async (email: string, password: string, fullName?: string) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -105,6 +105,18 @@ export function useAuth(): UseAuthReturn {
 
     if (error) {
       return { error: error.message };
+    }
+
+    // Seed demo user with site memberships
+    if (data.user && email === 'demo@peerbridge.health') {
+      try {
+        const response = await supabase.functions.invoke('seed-demo-user', {
+          body: { userId: data.user.id, email },
+        });
+        console.log('Demo user seeded:', response.data);
+      } catch (seedError) {
+        console.error('Failed to seed demo user:', seedError);
+      }
     }
 
     return { error: null };

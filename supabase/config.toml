@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.clinical-copilot]
 verify_jwt = false
+
+[functions.seed-demo-user]
+verify_jwt = false
