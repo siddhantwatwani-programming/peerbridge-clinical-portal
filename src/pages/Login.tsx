@@ -44,7 +44,8 @@ const Login: React.FC = () => {
         title: "Welcome back!",
         description: "Successfully authenticated. Redirecting to dashboard...",
       });
-      setTimeout(() => navigate('/dashboard'), 500);
+      setIsLoading(false);
+      navigate('/dashboard');
     }
   };
 
