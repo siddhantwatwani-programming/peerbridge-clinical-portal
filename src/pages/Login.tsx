@@ -4,7 +4,9 @@ import { User, Lock, Eye, EyeOff, Shield, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useSite } from '@/contexts/SiteContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SiteSwitcherModal } from '@/components/SiteSwitcherModal';
 import peerbridgeLogo from '@/assets/peerbridge-logo.jpg';
 
 const Login: React.FC = () => {
@@ -15,9 +17,11 @@ const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
+  const [showSiteSelector, setShowSiteSelector] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn, signUp, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { sites, isLoading: sitesLoading, currentSite } = useSite();
 
   // Redirect if already authenticated on initial page load
   useEffect(() => {
@@ -43,13 +47,11 @@ const Login: React.FC = () => {
       } else {
         toast({
           title: "Welcome back!",
-          description: "Successfully authenticated. Redirecting to dashboard...",
+          description: "Successfully authenticated. Please select a site...",
         });
-        // Small delay to allow auth state to propagate, then navigate
-        setTimeout(() => {
-          setIsLoading(false);
-          navigate('/dashboard', { replace: true });
-        }, 500);
+        // Show site selector modal after successful login
+        setIsLoading(false);
+        setShowSiteSelector(true);
       }
     } catch (err) {
       console.error('Sign in error:', err);
@@ -60,6 +62,15 @@ const Login: React.FC = () => {
       });
       setIsLoading(false);
     }
+  };
+
+  // Handle site selection and navigate to dashboard
+  const handleSiteSelected = (open: boolean) => {
+    if (!open) {
+      // Modal was closed (user selected a site or dismissed)
+      navigate('/dashboard', { replace: true });
+    }
+    setShowSiteSelector(open);
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -349,6 +360,12 @@ const Login: React.FC = () => {
           Protected by enterprise-grade security. All sessions are encrypted.
         </p>
       </div>
+
+      {/* Site Selector Modal - shown after successful login */}
+      <SiteSwitcherModal 
+        open={showSiteSelector} 
+        onOpenChange={handleSiteSelected}
+      />
     </div>
   );
 };
