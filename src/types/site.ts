@@ -95,4 +95,7 @@ export interface SiteContextValue {
   switchSite: (siteId: string) => void;
   hasPermission: (permission: keyof SitePermissions) => boolean;
   isGlobalAdmin: boolean;
+  isDemoMode?: boolean;
+  enableDemoMode?: () => void;
+  exitDemoMode?: () => void;
 }

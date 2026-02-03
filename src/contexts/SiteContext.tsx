@@ -6,6 +6,53 @@ import { User } from '@supabase/supabase-js';
 const SiteContext = createContext<SiteContextValue | undefined>(undefined);
 
 const CURRENT_SITE_KEY = 'peerbridge_current_site';
+const DEMO_MODE_KEY = 'peerbridge_demo_mode';
+
+// Demo sites for development/testing
+const DEMO_SITES: Site[] = [
+  {
+    id: 'demo-site-1',
+    name: 'Metro Heart Center',
+    slug: 'metro-heart',
+    logo_url: null,
+    address: '123 Medical Plaza, Suite 400, New York, NY 10001',
+    phone: '(212) 555-0100',
+    timezone: 'America/New_York',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'demo-site-2',
+    name: 'Coastal Health Partners',
+    slug: 'coastal-health',
+    logo_url: null,
+    address: '456 Ocean Boulevard, Miami, FL 33101',
+    phone: '(305) 555-0200',
+    timezone: 'America/New_York',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+];
+
+const DEMO_ROLE: SiteRole = {
+  id: 'demo-role',
+  site_id: 'demo-site-1',
+  name: 'Admin',
+  description: 'Demo Admin Role',
+  permissions: {
+    can_view_patients: true,
+    can_edit_patients: true,
+    can_view_reports: true,
+    can_edit_reports: true,
+    can_view_users: true,
+    can_edit_users: true,
+    can_manage_site: true,
+  },
+  is_default: false,
+  created_at: new Date().toISOString(),
+};
 
 export function SiteProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -16,6 +63,7 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isGlobalAdmin, setIsGlobalAdmin] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   // Fetch user's sites and memberships
   const fetchUserSites = useCallback(async (userId: string) => {
@@ -86,8 +134,52 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Enable demo mode with mock sites
+  const enableDemoMode = useCallback(() => {
+    setIsDemoMode(true);
+    setSites(DEMO_SITES);
+    setCurrentRole(DEMO_ROLE);
+    setIsGlobalAdmin(true);
+    const now = new Date().toISOString();
+    setMemberships(DEMO_SITES.map(site => ({
+      id: `demo-membership-${site.id}`,
+      user_id: 'demo-user',
+      site_id: site.id,
+      role_id: DEMO_ROLE.id,
+      is_active: true,
+      invited_by: null,
+      invited_at: now,
+      accepted_at: now,
+      last_accessed_at: now,
+      created_at: now,
+      site,
+      role: { ...DEMO_ROLE, site_id: site.id },
+    })));
+    localStorage.setItem(DEMO_MODE_KEY, 'true');
+    setIsLoading(false);
+  }, []);
+
+  // Exit demo mode
+  const exitDemoMode = useCallback(() => {
+    setIsDemoMode(false);
+    setSites([]);
+    setMemberships([]);
+    setCurrentSite(null);
+    setCurrentRole(null);
+    setIsGlobalAdmin(false);
+    localStorage.removeItem(DEMO_MODE_KEY);
+    localStorage.removeItem(CURRENT_SITE_KEY);
+  }, []);
+
   // Subscribe to auth changes
   useEffect(() => {
+    // Check for demo mode on mount
+    const storedDemoMode = localStorage.getItem(DEMO_MODE_KEY);
+    if (storedDemoMode === 'true') {
+      enableDemoMode();
+      return;
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         const currentUser = session?.user ?? null;
@@ -95,8 +187,8 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
 
         if (currentUser) {
           await fetchUserSites(currentUser.id);
-        } else {
-          // Clear state on logout
+        } else if (!isDemoMode) {
+          // Clear state on logout (but not in demo mode)
           setCurrentSite(null);
           setSites([]);
           setMemberships([]);
@@ -113,13 +205,13 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
       setUser(currentUser);
       if (currentUser) {
         fetchUserSites(currentUser.id);
-      } else {
+      } else if (!isDemoMode) {
         setIsLoading(false);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchUserSites]);
+  }, [fetchUserSites, enableDemoMode, isDemoMode]);
 
   // Switch site
   const switchSite = useCallback(async (siteId: string) => {
@@ -167,6 +259,9 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
     switchSite,
     hasPermission,
     isGlobalAdmin,
+    isDemoMode,
+    enableDemoMode,
+    exitDemoMode,
   };
 
   return (

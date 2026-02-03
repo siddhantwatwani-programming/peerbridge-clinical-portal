@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock, Eye, EyeOff, Shield, Mail } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, Shield, Mail, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useSite } from '@/contexts/SiteContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import peerbridgeLogo from '@/assets/peerbridge-logo.jpg';
 
@@ -18,6 +19,16 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn, signUp, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { enableDemoMode } = useSite();
+
+  const handleDemoMode = () => {
+    enableDemoMode?.();
+    toast({
+      title: "Demo Mode Activated",
+      description: "Exploring with sample clinical sites.",
+    });
+    navigate('/select-site', { replace: true });
+  };
 
   // Redirect if already authenticated on initial page load
   useEffect(() => {
@@ -333,11 +344,24 @@ const Login: React.FC = () => {
           </Tabs>
 
           {/* HIPAA Badge */}
-          <div className="px-8 pb-8">
+          <div className="px-8 pb-6">
             <div className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-full border border-emerald-200 bg-emerald-50/50 text-emerald-700 text-sm font-medium transition-all duration-200 hover:bg-emerald-50 hover:border-emerald-300">
               <Shield className="h-4 w-4" />
               <span>HIPAA Compliant Session</span>
             </div>
+          </div>
+
+          {/* Demo Mode Button */}
+          <div className="px-8 pb-8">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleDemoMode}
+              className="w-full h-10 border-dashed border-muted-foreground/30 text-muted-foreground hover:text-accent hover:border-accent transition-all duration-200"
+            >
+              <Play className="h-4 w-4 mr-2" />
+              Skip to Demo
+            </Button>
           </div>
         </div>
 
