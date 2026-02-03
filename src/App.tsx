@@ -21,6 +21,7 @@ import PatientTransmissions from "./pages/PatientTransmissions";
 import PlatformAnalytics from "./pages/PlatformAnalytics";
 import Studies from "./pages/Studies";
 import StudyDetail from "./pages/StudyDetail";
+import SiteSelection from "./pages/SiteSelection";
 import { SidebarLayout } from "./components/SidebarLayout";
 import NotFound from "./pages/NotFound";
 
@@ -36,6 +37,7 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Login />} />
+            <Route path="/select-site" element={<SiteSelection />} />
             
             {/* Protected routes with SidebarLayout */}
             <Route element={<SidebarLayout />}>
