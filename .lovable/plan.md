@@ -1,41 +1,85 @@
 
+# Plan: Fix Login Flow Race Condition
 
-## Assign Site Memberships to Existing Users
+## Problem Analysis
+The login flow gets stuck because of a **race condition** between authentication state and navigation:
 
-Your existing users need site memberships to access the multi-clinic switching feature. I'll assign each doctor to different clinics with varied roles for testing.
+1. After successful login, the app navigates to `/select-site` with a 100ms delay
+2. The `SiteSelection` page uses `useAuth()` which creates a **fresh hook instance** with its own loading state
+3. Before the auth state fully initializes, the page's `useEffect` sees `!authLoading && !isAuthenticated` and redirects back to `/`
 
-### Proposed Site Assignments
+The core issue is that `useAuth()` is a **stateful hook** - each component calling it gets its own isolated state that needs to initialize independently.
 
-| Doctor | Email | Clinics & Roles |
-|--------|-------|-----------------|
-| Ravi | demo@yopmail.com | Dev Clinic (Admin), Metro Heart Center (Interpreter), Coastal Health Partners (Viewer) |
-| Raju | demo2@yopmail.com | Metro Heart Center (Admin), Coastal Health Partners (Interpreter) |
-| Raju | demo3@yomail.com | Coastal Health Partners (Admin) |
-| Mahesh | demo5@yopmail.com | Dev Clinic (Interpreter), Metro Heart Center (Viewer) |
+## Solution
 
-### What This Enables
+### Step 1: Update SiteSelection Authentication Check
+Modify the redirect logic in `SiteSelection.tsx` to be more defensive:
+- Only redirect to login if auth is **definitively** not authenticated (not just during loading)
+- Wait for BOTH `authLoading` AND `sitesLoading` to complete before making any redirect decision
 
-After implementation, each doctor can:
-- Sign in with their existing password
-- See the site switcher in the header
-- Switch between their assigned clinics
-- View different role badges based on their access level
+```typescript
+// Before (problematic)
+useEffect(() => {
+  if (!authLoading && !isAuthenticated) {
+    navigate('/', { replace: true });
+  }
+}, [isAuthenticated, authLoading, navigate]);
 
-### Technical Implementation
-
-**Database Migration:**
-Insert site_memberships records linking each user to their assigned sites with appropriate roles:
-
-```sql
-INSERT INTO site_memberships (user_id, site_id, role_id, is_active, accepted_at)
-VALUES 
-  -- demo@yopmail.com assignments
-  ('user-id', 'dev-clinic-id', 'admin-role-id', true, now()),
-  ('user-id', 'metro-heart-id', 'interpreter-role-id', true, now()),
-  -- ... additional assignments
+// After (fixed)
+useEffect(() => {
+  // Only redirect if auth has finished loading AND user is definitely not authenticated
+  // Also ensure we've given the auth state time to propagate
+  if (!authLoading && !sitesLoading && !isAuthenticated) {
+    navigate('/', { replace: true });
+  }
+}, [isAuthenticated, authLoading, sitesLoading, navigate]);
 ```
 
-### Login Credentials
+### Step 2: Add Session Check Fallback in SiteSelection
+Add a direct session check using `supabase.auth.getSession()` as a fallback to ensure we're not redirecting prematurely:
 
-After approval, you can log in with any of these emails using the password you created during signup. If you forgot the password, I can help reset it.
+```typescript
+const [hasCheckedSession, setHasCheckedSession] = useState(false);
 
+useEffect(() => {
+  const checkSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate('/', { replace: true });
+    }
+    setHasCheckedSession(true);
+  };
+  
+  // Only check session after initial loading completes
+  if (!authLoading && !isAuthenticated && !hasCheckedSession) {
+    checkSession();
+  }
+}, [authLoading, isAuthenticated, hasCheckedSession, navigate]);
+```
+
+### Step 3: Simplify Login Navigation
+Remove the `setTimeout` wrapper since the navigation should happen after auth state is confirmed:
+
+```typescript
+// In handleSignIn success block
+toast({
+  title: "Welcome back!",
+  description: "Successfully authenticated.",
+});
+setIsLoading(false);
+navigate('/select-site', { replace: true });
+```
+
+## Files to Modify
+
+| File | Change |
+|------|--------|
+| `src/pages/SiteSelection.tsx` | Add defensive session check before redirecting to login |
+| `src/pages/Login.tsx` | Remove setTimeout wrapper from navigation |
+
+## Technical Details
+
+The fix ensures:
+1. SiteSelection won't redirect to login until it has **confirmed** via direct API call that there's no valid session
+2. This handles the timing gap between navigation and `onAuthStateChange` listener firing
+3. The loading state shows "Loading your sites..." while this verification happens
