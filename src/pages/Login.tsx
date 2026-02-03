@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Lock, Eye, EyeOff, Shield, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { useSite } from '@/contexts/SiteContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import peerbridgeLogo from '@/assets/peerbridge-logo.jpg';
 
@@ -14,37 +13,22 @@ const Login: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [waitingForSites, setWaitingForSites] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn, signUp, isAuthenticated, isLoading: authLoading } = useAuth();
-  const { sites, isLoading: sitesLoading } = useSite();
-  const hasNavigated = useRef(false);
 
   // Redirect if already authenticated on initial page load
   useEffect(() => {
-    if (!authLoading && isAuthenticated && !sitesLoading && !hasNavigated.current) {
-      hasNavigated.current = true;
+    if (!authLoading && isAuthenticated) {
       navigate('/select-site', { replace: true });
     }
-  }, [isAuthenticated, authLoading, sitesLoading, navigate]);
-
-  // Wait for sites to load after successful login
-  useEffect(() => {
-    if (waitingForSites && !sitesLoading && isAuthenticated && !hasNavigated.current) {
-      hasNavigated.current = true;
-      setIsLoading(false);
-      setWaitingForSites(false);
-      navigate('/select-site', { replace: true });
-    }
-  }, [waitingForSites, sitesLoading, isAuthenticated, navigate]);
+  }, [isAuthenticated, authLoading, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    hasNavigated.current = false;
 
     try {
       const { error } = await signIn(email, password);
@@ -61,8 +45,11 @@ const Login: React.FC = () => {
           title: "Welcome back!",
           description: "Successfully authenticated.",
         });
-        // Wait for sites to be loaded before navigating
-        setWaitingForSites(true);
+        setIsLoading(false);
+        // Navigate to site selection after successful auth
+        setTimeout(() => {
+          navigate('/select-site', { replace: true });
+        }, 100);
       }
     } catch (err) {
       console.error('Sign in error:', err);
