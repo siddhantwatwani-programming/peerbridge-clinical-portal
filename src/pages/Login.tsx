@@ -46,10 +46,7 @@ const Login: React.FC = () => {
           description: "Successfully authenticated.",
         });
         setIsLoading(false);
-        // Navigate to site selection after successful auth
-        setTimeout(() => {
-          navigate('/select-site', { replace: true });
-        }, 100);
+        navigate('/select-site', { replace: true });
       }
     } catch (err) {
       console.error('Sign in error:', err);

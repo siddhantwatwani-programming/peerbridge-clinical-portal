@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building, MapPin, Users, ChevronRight, LogOut } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useSite } from '@/contexts/SiteContext';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import peerbridgeLogo from '@/assets/peerbridge-logo.jpg';
 
@@ -13,13 +14,23 @@ const SiteSelection: React.FC = () => {
   const navigate = useNavigate();
   const { sites, memberships, switchSite, isLoading: sitesLoading } = useSite();
   const { isAuthenticated, isLoading: authLoading, signOut, user } = useAuth();
+  const [hasCheckedSession, setHasCheckedSession] = useState(false);
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated - with session fallback check
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate('/', { replace: true });
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/', { replace: true });
+      }
+      setHasCheckedSession(true);
+    };
+
+    // Only check session after initial auth loading completes and hook says not authenticated
+    if (!authLoading && !isAuthenticated && !hasCheckedSession) {
+      checkSession();
     }
-  }, [isAuthenticated, authLoading, navigate]);
+  }, [authLoading, isAuthenticated, hasCheckedSession, navigate]);
 
   // Auto-redirect to dashboard if user has only one site
   useEffect(() => {
