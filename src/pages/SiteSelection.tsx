@@ -12,12 +12,18 @@ import peerbridgeLogo from '@/assets/peerbridge-logo.jpg';
 
 const SiteSelection: React.FC = () => {
   const navigate = useNavigate();
-  const { sites, memberships, switchSite, isLoading: sitesLoading } = useSite();
+  const { sites, memberships, switchSite, isLoading: sitesLoading, isDemoMode, exitDemoMode } = useSite();
   const { isAuthenticated, isLoading: authLoading, signOut, user } = useAuth();
   const [hasCheckedSession, setHasCheckedSession] = useState(false);
 
-  // Redirect to login if not authenticated - with session fallback check
+  // Redirect to login if not authenticated - with session fallback check (skip in demo mode)
   useEffect(() => {
+    // Skip auth check in demo mode
+    if (isDemoMode) {
+      setHasCheckedSession(true);
+      return;
+    }
+
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -30,7 +36,7 @@ const SiteSelection: React.FC = () => {
     if (!authLoading && !isAuthenticated && !hasCheckedSession) {
       checkSession();
     }
-  }, [authLoading, isAuthenticated, hasCheckedSession, navigate]);
+  }, [authLoading, isAuthenticated, hasCheckedSession, navigate, isDemoMode]);
 
   // Auto-redirect to dashboard if user has only one site
   useEffect(() => {
@@ -46,7 +52,11 @@ const SiteSelection: React.FC = () => {
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    if (isDemoMode) {
+      exitDemoMode?.();
+    } else {
+      await signOut();
+    }
     navigate('/', { replace: true });
   };
 
@@ -55,7 +65,8 @@ const SiteSelection: React.FC = () => {
     return membership?.role?.name || 'Member';
   };
 
-  if (authLoading || sitesLoading) {
+  // Show loading only if not in demo mode and still loading
+  if (!isDemoMode && (authLoading || sitesLoading)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <div className="text-center">
@@ -79,8 +90,13 @@ const SiteSelection: React.FC = () => {
           <span className="text-xl font-semibold text-white">Peerbridge Health</span>
         </div>
         <div className="flex items-center gap-4">
+          {isDemoMode && (
+            <Badge variant="outline" className="text-amber-400 border-amber-400/50">
+              Demo Mode
+            </Badge>
+          )}
           <span className="text-sm text-muted-foreground">
-            {user?.email}
+            {isDemoMode ? 'Demo User' : user?.email}
           </span>
           <Button 
             variant="ghost" 
