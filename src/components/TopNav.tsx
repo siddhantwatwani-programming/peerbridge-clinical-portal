@@ -34,7 +34,7 @@ const navItems: NavItem[] = [
   { label: 'Patients', href: '/patients', icon: Users },
   { label: 'Studies', href: '/studies', icon: FileText, badge: 246 },
   { label: 'Patient Transmissions', href: '/transmissions', icon: Activity },
-  { label: 'Reports', href: '/reports', icon: FileText, badge: 2 },
+  { label: 'Final Reports', href: '/reports', icon: FileText, badge: 2 },
   { label: 'Site Settings', href: '/users', icon: Settings },
   { label: 'Research', href: '/research', icon: FlaskConical },
   { 
@@ -46,7 +46,6 @@ const navItems: NavItem[] = [
       { label: 'Device Shipments', href: '/inventory/shipments' },
     ]
   },
-  { label: 'Platform Analytics', href: '/analytics', icon: LayoutDashboard },
 ];
 
 export const TopNav: React.FC = () => {
