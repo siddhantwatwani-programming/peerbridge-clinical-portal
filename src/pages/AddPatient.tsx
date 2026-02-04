@@ -114,7 +114,15 @@ const AddPatient: React.FC = () => {
   }, []);
 
   const handleVoiceComplete = useCallback(() => {
-    toast.success('All mandatory fields captured via voice!');
+    // Voice capture complete - dialog will handle next steps
+  }, []);
+
+  const handleVoiceRegister = useCallback(() => {
+    // Trigger form submission programmatically
+    const form = document.querySelector('form');
+    if (form) {
+      form.requestSubmit();
+    }
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -155,6 +163,7 @@ const AddPatient: React.FC = () => {
               fields={mandatoryFields}
               onFieldCaptured={handleFieldCaptured}
               onComplete={handleVoiceComplete}
+              onRegister={handleVoiceRegister}
             />
           </div>
           <div className="flex-1 space-y-6">
