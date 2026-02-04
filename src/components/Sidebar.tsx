@@ -38,7 +38,7 @@ const navItems: NavItem[] = [
   { label: 'Patients', href: '/patients', icon: Users },
   { label: 'Studies', href: '/studies', icon: BookOpen, badge: 246 },
   { label: 'Patient Transmissions', href: '/events', icon: Calendar, badge: 3 },
-  { label: 'Reports', href: '/reports', icon: FileText },
+  { label: 'Final Reports', href: '/reports', icon: FileText },
   { label: 'Site Settings', href: '/users', icon: Settings },
   { label: 'Research', href: '/research', icon: FlaskConical },
   { 
@@ -50,7 +50,6 @@ const navItems: NavItem[] = [
       { label: 'Device Shipments', href: '/inventory/shipments' },
     ]
   },
-  { label: 'Platform Analytics', href: '/analytics', icon: LayoutDashboard },
 ];
 
 interface SidebarProps {
