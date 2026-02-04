@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Mic, X, Check, Loader2, Volume2, Eye, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,6 +28,13 @@ interface GuidedVoiceInputProps {
   className?: string;
 }
 
+type GuidedVoiceDraft = {
+  v: 1;
+  savedAt: number;
+  currentFieldIndex: number;
+  capturedValues: Record<string, string>;
+};
+
 export function GuidedVoiceInput({ 
   fields, 
   onFieldCaptured, 
@@ -41,6 +48,7 @@ export function GuidedVoiceInput({
   const [isProcessing, setIsProcessing] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [currentTranscript, setCurrentTranscript] = useState('');
+  const [hasDraft, setHasDraft] = useState(false);
   
   // Refs for async operations
   const isSpeakingRef = useRef(false);
@@ -48,9 +56,16 @@ export function GuidedVoiceInput({
   const currentFieldIndexRef = useRef(0);
   const hasProcessedCurrentFieldRef = useRef(false);
   const recognitionActiveRef = useRef(false);
+  const ignoreTranscriptsUntilRef = useRef(0);
+  const stopRequestedRef = useRef(false);
 
   const currentField = fields[currentFieldIndex];
   const isComplete = currentFieldIndex >= fields.length;
+
+  const draftStorageKey = useMemo(() => {
+    const keys = fields.map((f) => f.key).join('|');
+    return `guided_voice_draft:v1:${keys}`;
+  }, [fields]);
 
   // Sync refs
   useEffect(() => { isActiveRef.current = isActive; }, [isActive]);
@@ -143,36 +158,15 @@ export function GuidedVoiceInput({
     return processedValue;
   }, [fields, onFieldCaptured]);
 
-  // Move to next field
-  const moveToNextField = useCallback(async (displayValue: string, fieldLabel: string) => {
-    const nextIndex = currentFieldIndexRef.current + 1;
-    
-    // Brief confirmation
-    await speak(`Got it. ${fieldLabel}: ${displayValue}`);
-    
-    if (nextIndex < fields.length) {
-      setCurrentFieldIndex(nextIndex);
-      hasProcessedCurrentFieldRef.current = false;
-      
-      // Ask next question
-      setTimeout(async () => {
-        if (!isActiveRef.current) return;
-        setIsProcessing(true);
-        await speak(fields[nextIndex].question);
-        setIsProcessing(false);
-      }, 200);
-    } else {
-      // All fields complete - show confirmation dialog
-      await speak('All fields have been captured. Please review your information.');
-      setShowConfirmDialog(true);
-      onComplete();
-    }
-  }, [fields, speak, onComplete]);
-
   const voiceCommand = useVoiceCommand({
     onTranscript: (transcript, isFinal) => {
       // CRITICAL: Ignore if AI is speaking to prevent capturing its own voice
       if (isSpeakingRef.current) {
+        return;
+      }
+
+      // Ignore a short window AFTER speech ends (speaker echo)
+      if (Date.now() < ignoreTranscriptsUntilRef.current) {
         return;
       }
       
@@ -212,14 +206,100 @@ export function GuidedVoiceInput({
     continuous: true
   });
 
+  // Speak while pausing recognition to avoid transcribing our own prompts
+  const speakWithPause = useCallback(async (text: string) => {
+    setIsProcessing(true);
+    isSpeakingRef.current = true;
+    voiceCommand.stopListening();
+
+    try {
+      await speak(text);
+    } finally {
+      isSpeakingRef.current = false;
+      ignoreTranscriptsUntilRef.current = Date.now() + 800;
+      setIsProcessing(false);
+
+      if (isActiveRef.current && recognitionActiveRef.current && !stopRequestedRef.current) {
+        setTimeout(() => {
+          if (isActiveRef.current && recognitionActiveRef.current && !stopRequestedRef.current) {
+            voiceCommand.startListening();
+          }
+        }, 150);
+      }
+    }
+  }, [voiceCommand, speak]);
+
+  // Move to next field
+  const moveToNextField = useCallback(async (displayValue: string, fieldLabel: string) => {
+    const nextIndex = currentFieldIndexRef.current + 1;
+
+    // Brief confirmation
+    await speakWithPause(`Got it. ${fieldLabel}: ${displayValue}`);
+
+    if (nextIndex < fields.length) {
+      setCurrentFieldIndex(nextIndex);
+      hasProcessedCurrentFieldRef.current = false;
+
+      // Ask next question
+      setTimeout(async () => {
+        if (!isActiveRef.current) return;
+        await speakWithPause(fields[nextIndex].question);
+      }, 200);
+    } else {
+      // All fields complete - show confirmation dialog
+      await speakWithPause('All fields have been captured. Please review your information.');
+      setShowConfirmDialog(true);
+      onComplete();
+    }
+  }, [fields, speakWithPause, onComplete]);
+
   // Start the guided input
   const handleStart = useCallback(async () => {
+    stopRequestedRef.current = false;
+
     // Start listening immediately on click (browser requirement)
     voiceCommand.startListening();
     recognitionActiveRef.current = true;
     
     // Reset state
     setIsActive(true);
+
+    // Resume from draft if present
+    let draft: GuidedVoiceDraft | null = null;
+    try {
+      const raw = sessionStorage.getItem(draftStorageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw) as GuidedVoiceDraft;
+        if (parsed?.v === 1) draft = parsed;
+      }
+    } catch {
+      // ignore
+    }
+
+    if (draft && Object.keys(draft.capturedValues || {}).length > 0) {
+      const resumeIndex = Math.min(draft.currentFieldIndex || 0, fields.length);
+      setCapturedValues(draft.capturedValues || {});
+      setCurrentFieldIndex(resumeIndex);
+      setShowConfirmDialog(false);
+      setCurrentTranscript('');
+      hasProcessedCurrentFieldRef.current = false;
+      setHasDraft(false);
+
+      // Hydrate parent form values immediately
+      setTimeout(() => {
+        Object.entries(draft!.capturedValues || {}).forEach(([k, v]) => onFieldCaptured(k, v));
+      }, 0);
+
+      if (resumeIndex < fields.length) {
+        await speakWithPause(`Welcome back. ${fields[resumeIndex].question}`);
+      } else {
+        await speakWithPause('All fields were already captured. Please review your information.');
+        setShowConfirmDialog(true);
+        onComplete();
+      }
+      return;
+    }
+
     setCurrentFieldIndex(0);
     setCapturedValues({});
     setShowConfirmDialog(false);
@@ -227,17 +307,15 @@ export function GuidedVoiceInput({
     hasProcessedCurrentFieldRef.current = false;
 
     // Intro and first question
-    setIsProcessing(true);
-    await speak('I will ask you all the required fields one by one. Please answer after each question.');
-    
+    await speakWithPause('I will ask you the required fields one by one. Please answer after each question.');
     if (fields.length > 0) {
-      await speak(fields[0].question);
+      await speakWithPause(fields[0].question);
     }
-    setIsProcessing(false);
-  }, [speak, voiceCommand, fields]);
+  }, [voiceCommand, fields, speakWithPause, draftStorageKey, onFieldCaptured, onComplete]);
 
   // Close voice input
   const handleClose = useCallback(() => {
+    stopRequestedRef.current = true;
     stopSpeech();
     voiceCommand.stopListening();
     recognitionActiveRef.current = false;
@@ -246,6 +324,37 @@ export function GuidedVoiceInput({
     setCurrentTranscript('');
     hasProcessedCurrentFieldRef.current = false;
   }, [stopSpeech, voiceCommand]);
+
+  // Persist draft while active (so refresh can resume)
+  useEffect(() => {
+    if (!isActive) return;
+    const draft: GuidedVoiceDraft = {
+      v: 1,
+      savedAt: Date.now(),
+      currentFieldIndex,
+      capturedValues,
+    };
+    try {
+      sessionStorage.setItem(draftStorageKey, JSON.stringify(draft));
+    } catch {
+      // ignore
+    }
+  }, [isActive, currentFieldIndex, capturedValues, draftStorageKey]);
+
+  // Detect an existing draft (so the button can say "Resume")
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(draftStorageKey);
+      if (!raw) {
+        setHasDraft(false);
+        return;
+      }
+      const parsed = JSON.parse(raw) as GuidedVoiceDraft;
+      setHasDraft(!!parsed?.capturedValues && Object.keys(parsed.capturedValues).length > 0);
+    } catch {
+      setHasDraft(false);
+    }
+  }, [draftStorageKey]);
 
   // Back to editing from confirmation
   const handleBackToEditing = useCallback(() => {
@@ -256,11 +365,16 @@ export function GuidedVoiceInput({
   // Register patient
   const handleRegister = useCallback(() => {
     setShowConfirmDialog(false);
+    try {
+      sessionStorage.removeItem(draftStorageKey);
+    } catch {
+      // ignore
+    }
     handleClose();
     if (onRegister) {
       onRegister();
     }
-  }, [handleClose, onRegister]);
+  }, [handleClose, onRegister, draftStorageKey]);
 
   if (!voiceCommand.isSupported) {
     return null;
@@ -280,7 +394,7 @@ export function GuidedVoiceInput({
         )}
       >
         <Mic className="h-4 w-4" />
-        Voice Input
+        {hasDraft ? 'Resume Voice Input' : 'Voice Input'}
       </Button>
     );
   }
