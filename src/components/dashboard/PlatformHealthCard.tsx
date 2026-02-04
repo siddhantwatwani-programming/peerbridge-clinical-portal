@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Activity, 
   AlertTriangle, 
@@ -10,7 +11,8 @@ import {
   FileText,
   Package,
   Clock,
-  Users
+  Users,
+  ChevronRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +21,10 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+export interface PlatformHealthCardProps {
+  onTabChange?: (tab: string) => void;
+}
 
 interface HealthInsight {
   type: 'urgent' | 'warning' | 'info' | 'success';
@@ -61,7 +67,8 @@ const mockMetrics = {
   usersActive: 8
 };
 
-export const PlatformHealthCard: React.FC = () => {
+export const PlatformHealthCard: React.FC<PlatformHealthCardProps> = ({ onTabChange }) => {
+  const navigate = useNavigate();
   const [health, setHealth] = useState<PlatformHealth | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -198,28 +205,44 @@ export const PlatformHealthCard: React.FC = () => {
           <Progress value={health.healthScore} className="h-2" />
         </div>
 
-        {/* Quick Stats */}
+        {/* Quick Stats - Actionable */}
         <div className="grid grid-cols-4 gap-3">
-          <div className="text-center p-2 bg-card rounded-lg border border-border">
-            <FileText className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
-            <p className="text-lg font-semibold">{health.workloadSummary.pendingReports}</p>
+          <button
+            onClick={() => onTabChange?.('reports')}
+            className="text-center p-3 bg-card rounded-lg border border-border hover:border-accent/50 hover:bg-accent/5 transition-all group cursor-pointer"
+          >
+            <FileText className="h-4 w-4 mx-auto text-muted-foreground mb-1 group-hover:text-accent transition-colors" />
+            <p className="text-lg font-semibold group-hover:text-accent transition-colors">{health.workloadSummary.pendingReports}</p>
             <p className="text-xs text-muted-foreground">Pending Reports</p>
-          </div>
-          <div className="text-center p-2 bg-card rounded-lg border border-border">
-            <Package className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
-            <p className="text-lg font-semibold">{health.workloadSummary.pendingStudies}</p>
+            <ChevronRight className="h-3 w-3 mx-auto mt-1 text-muted-foreground/50 group-hover:text-accent opacity-0 group-hover:opacity-100 transition-all" />
+          </button>
+          <button
+            onClick={() => onTabChange?.('studies')}
+            className="text-center p-3 bg-card rounded-lg border border-border hover:border-accent/50 hover:bg-accent/5 transition-all group cursor-pointer"
+          >
+            <Package className="h-4 w-4 mx-auto text-muted-foreground mb-1 group-hover:text-accent transition-colors" />
+            <p className="text-lg font-semibold group-hover:text-accent transition-colors">{health.workloadSummary.pendingStudies}</p>
             <p className="text-xs text-muted-foreground">Active Studies</p>
-          </div>
-          <div className="text-center p-2 bg-card rounded-lg border border-border">
-            <Clock className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
-            <p className="text-lg font-semibold">{health.workloadSummary.avgTurnaroundHours}h</p>
+            <ChevronRight className="h-3 w-3 mx-auto mt-1 text-muted-foreground/50 group-hover:text-accent opacity-0 group-hover:opacity-100 transition-all" />
+          </button>
+          <button
+            onClick={() => toast.info('Turnaround metrics are based on completed reports in the last 7 days.')}
+            className="text-center p-3 bg-card rounded-lg border border-border hover:border-accent/50 hover:bg-accent/5 transition-all group cursor-pointer"
+          >
+            <Clock className="h-4 w-4 mx-auto text-muted-foreground mb-1 group-hover:text-accent transition-colors" />
+            <p className="text-lg font-semibold group-hover:text-accent transition-colors">{health.workloadSummary.avgTurnaroundHours}h</p>
             <p className="text-xs text-muted-foreground">Avg Turnaround</p>
-          </div>
-          <div className="text-center p-2 bg-card rounded-lg border border-border">
-            <Users className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
-            <p className="text-lg font-semibold">{mockMetrics.usersActive}</p>
+            <ChevronRight className="h-3 w-3 mx-auto mt-1 text-muted-foreground/50 group-hover:text-accent opacity-0 group-hover:opacity-100 transition-all" />
+          </button>
+          <button
+            onClick={() => navigate('/users')}
+            className="text-center p-3 bg-card rounded-lg border border-border hover:border-accent/50 hover:bg-accent/5 transition-all group cursor-pointer"
+          >
+            <Users className="h-4 w-4 mx-auto text-muted-foreground mb-1 group-hover:text-accent transition-colors" />
+            <p className="text-lg font-semibold group-hover:text-accent transition-colors">{mockMetrics.usersActive}</p>
             <p className="text-xs text-muted-foreground">Active Users</p>
-          </div>
+            <ChevronRight className="h-3 w-3 mx-auto mt-1 text-muted-foreground/50 group-hover:text-accent opacity-0 group-hover:opacity-100 transition-all" />
+          </button>
         </div>
 
         {/* AI Insights */}
