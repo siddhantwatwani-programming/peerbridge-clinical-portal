@@ -20,24 +20,67 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { VoiceFormInput } from '@/components/voice/VoiceFormInput';
-import { FieldSchema } from '@/hooks/useVoiceFormParser';
+import { GuidedVoiceInput, MandatoryField } from '@/components/voice/GuidedVoiceInput';
 
-// Field schema for voice parsing
-const patientFieldSchema: FieldSchema[] = [
-  { key: 'firstName', label: 'First Name', type: 'text' },
-  { key: 'middleName', label: 'Middle Name', type: 'text' },
-  { key: 'lastName', label: 'Last Name', type: 'text' },
-  { key: 'dob', label: 'Date of Birth', type: 'date' },
-  { key: 'mrn', label: 'Medical Record Number', type: 'text' },
-  { key: 'race', label: 'Race', type: 'select', options: ['white', 'black', 'asian', 'hispanic', 'native', 'pacific', 'other'] },
-  { key: 'gender', label: 'Gender', type: 'select', options: ['male', 'female', 'other', 'prefer-not'] },
-  { key: 'cellPhone', label: 'Cell Phone', type: 'phone' },
-  { key: 'email', label: 'Email Address', type: 'email' },
-  { key: 'streetAddress', label: 'Street Address', type: 'text' },
-  { key: 'city', label: 'City', type: 'text' },
-  { key: 'state', label: 'State', type: 'text' },
-  { key: 'zipCode', label: 'Zip Code', type: 'text' },
+// Mandatory fields for guided voice input
+const mandatoryFields: MandatoryField[] = [
+  { 
+    key: 'firstName', 
+    label: 'First Name', 
+    question: 'What is the patient\'s first name?',
+    type: 'text' 
+  },
+  { 
+    key: 'lastName', 
+    label: 'Last Name', 
+    question: 'What is the patient\'s last name?',
+    type: 'text' 
+  },
+  { 
+    key: 'dob', 
+    label: 'Date of Birth', 
+    question: 'What is the patient\'s date of birth? Please say it like January 15, 1985.',
+    type: 'date' 
+  },
+  { 
+    key: 'mrn', 
+    label: 'Medical Record Number', 
+    question: 'What is the medical record number or MRN?',
+    type: 'text' 
+  },
+  { 
+    key: 'race', 
+    label: 'Race', 
+    question: 'What is the patient\'s race?',
+    type: 'select',
+    options: [
+      { value: 'white', label: 'White' },
+      { value: 'black', label: 'Black or African American' },
+      { value: 'asian', label: 'Asian' },
+      { value: 'hispanic', label: 'Hispanic or Latino' },
+      { value: 'native', label: 'American Indian or Alaska Native' },
+      { value: 'pacific', label: 'Native Hawaiian or Pacific Islander' },
+      { value: 'other', label: 'Other' },
+    ]
+  },
+  { 
+    key: 'gender', 
+    label: 'Gender', 
+    question: 'What is the patient\'s gender? Male, Female, or Other?',
+    type: 'select',
+    options: [
+      { value: 'male', label: 'Male' },
+      { value: 'female', label: 'Female' },
+      { value: 'other', label: 'Other' },
+      { value: 'prefer-not', label: 'Prefer not to say' },
+    ]
+  },
+  { 
+    key: 'cellPhone', 
+    label: 'Cell Phone', 
+    question: 'What is the patient\'s cell phone number?',
+    type: 'phone' 
+  },
 ];
 
 const AddPatient: React.FC = () => {
@@ -48,24 +91,30 @@ const AddPatient: React.FC = () => {
   const [patientData, setPatientData] = useState({ firstName: '', lastName: '', mrn: '' });
   
   // Form field states for voice input
-  const [formValues, setFormValues] = useState<Record<string, string>>({});
   const [race, setRace] = useState('');
   const [gender, setGender] = useState('');
+  const [voiceValues, setVoiceValues] = useState<Record<string, string>>({});
 
-  const handleVoiceFieldsParsed = useCallback((parsedFields: Record<string, string>) => {
-    setFormValues(prev => ({ ...prev, ...parsedFields }));
+  // Handle single field captured from guided voice input
+  const handleFieldCaptured = useCallback((key: string, value: string) => {
+    setVoiceValues(prev => ({ ...prev, [key]: value }));
     
-    // Handle select fields separately
-    if (parsedFields.race) setRace(parsedFields.race);
-    if (parsedFields.gender) setGender(parsedFields.gender);
+    // Handle select fields
+    if (key === 'race') setRace(value);
+    if (key === 'gender') setGender(value);
     
-    // Update actual form inputs
-    Object.entries(parsedFields).forEach(([key, value]) => {
-      const input = document.getElementById(key) as HTMLInputElement;
-      if (input && key !== 'race' && key !== 'gender') {
-        input.value = value;
-      }
-    });
+    // Update DOM input for text fields
+    const input = document.getElementById(key) as HTMLInputElement;
+    if (input && key !== 'race' && key !== 'gender') {
+      input.value = value;
+      // Trigger change event for React to pick up
+      const event = new Event('input', { bubbles: true });
+      input.dispatchEvent(event);
+    }
+  }, []);
+
+  const handleVoiceComplete = useCallback(() => {
+    toast.success('All mandatory fields captured via voice!');
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -102,24 +151,30 @@ const AddPatient: React.FC = () => {
             <h2 className="text-lg font-semibold text-foreground">
               Patient Information
             </h2>
-            <VoiceFormInput
-              context="patient_registration"
-              fields={patientFieldSchema}
-              onFieldsParsed={handleVoiceFieldsParsed}
+            <GuidedVoiceInput
+              fields={mandatoryFields}
+              onFieldCaptured={handleFieldCaptured}
+              onComplete={handleVoiceComplete}
             />
           </div>
           <div className="flex-1 space-y-6">
             {/* Row 1: Names and DOB */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">
-                  First Name <span className="text-accent">*</span>
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="firstName">
+                    First Name <span className="text-accent">*</span>
+                  </Label>
+                  {voiceValues.firstName && (
+                    <span className="text-xs text-success">✓ Voice</span>
+                  )}
+                </div>
                 <Input 
                   id="firstName" 
                   placeholder="Enter the First Name" 
                   required 
                   className="bg-background"
+                  defaultValue={voiceValues.firstName || ''}
                 />
               </div>
               <div className="space-y-2">
@@ -131,20 +186,31 @@ const AddPatient: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">
-                  Last Name <span className="text-accent">*</span>
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="lastName">
+                    Last Name <span className="text-accent">*</span>
+                  </Label>
+                  {voiceValues.lastName && (
+                    <span className="text-xs text-success">✓ Voice</span>
+                  )}
+                </div>
                 <Input 
                   id="lastName" 
                   placeholder="Enter the Last Name" 
                   required 
                   className="bg-background"
+                  defaultValue={voiceValues.lastName || ''}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="dob">
-                  Date of Birth <span className="text-accent">*</span>
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="dob">
+                    Date of Birth <span className="text-accent">*</span>
+                  </Label>
+                  {voiceValues.dob && (
+                    <span className="text-xs text-success">✓ Voice</span>
+                  )}
+                </div>
                 <div className="relative">
                   <Input 
                     id="dob" 
@@ -152,6 +218,7 @@ const AddPatient: React.FC = () => {
                     placeholder="Enter Date" 
                     required 
                     className="bg-background"
+                    defaultValue={voiceValues.dob || ''}
                   />
                 </div>
               </div>
@@ -169,20 +236,31 @@ const AddPatient: React.FC = () => {
             {/* Row 2: MRN, Race, Gender */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="mrn">
-                  Medical Record Number <span className="text-accent">*</span>
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="mrn">
+                    Medical Record Number <span className="text-accent">*</span>
+                  </Label>
+                  {voiceValues.mrn && (
+                    <span className="text-xs text-success">✓ Voice</span>
+                  )}
+                </div>
                 <Input 
                   id="mrn" 
                   placeholder="Enter the Medical Record Number" 
                   required 
                   className="bg-background"
+                  defaultValue={voiceValues.mrn || ''}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="race">
-                  Race <span className="text-accent">*</span>
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="race">
+                    Race <span className="text-accent">*</span>
+                  </Label>
+                  {voiceValues.race && (
+                    <span className="text-xs text-success">✓ Voice</span>
+                  )}
+                </div>
                 <Select value={race} onValueChange={setRace} required>
                   <SelectTrigger className="bg-background">
                     <SelectValue placeholder="Select Race" />
@@ -199,9 +277,14 @@ const AddPatient: React.FC = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="gender">
-                  Gender <span className="text-accent">*</span>
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="gender">
+                    Gender <span className="text-accent">*</span>
+                  </Label>
+                  {voiceValues.gender && (
+                    <span className="text-xs text-success">✓ Voice</span>
+                  )}
+                </div>
                 <Select value={gender} onValueChange={setGender} required>
                   <SelectTrigger className="bg-background">
                     <SelectValue placeholder="Select Gender" />
@@ -219,15 +302,21 @@ const AddPatient: React.FC = () => {
             {/* Row 3: Cell Phone */}
             <div className="space-y-3">
               <div className="max-w-md space-y-2">
-                <Label htmlFor="cellPhone">
-                  Cell Phone<span className="text-accent">*</span>
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="cellPhone">
+                    Cell Phone<span className="text-accent">*</span>
+                  </Label>
+                  {voiceValues.cellPhone && (
+                    <span className="text-xs text-success">✓ Voice</span>
+                  )}
+                </div>
                 <Input 
                   id="cellPhone" 
                   placeholder="Enter Cell Phone number" 
                   disabled={noCellPhone}
                   required={!noCellPhone}
                   className="bg-background"
+                  defaultValue={voiceValues.cellPhone || ''}
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -241,7 +330,6 @@ const AddPatient: React.FC = () => {
                 </Label>
               </div>
             </div>
-
             {/* Row 4: Email, Marital Status, Address */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
