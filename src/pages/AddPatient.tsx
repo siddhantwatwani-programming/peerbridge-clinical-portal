@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Plus, ArrowLeft } from 'lucide-react';
+import { Plus, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +20,25 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { VoiceFormInput } from '@/components/voice/VoiceFormInput';
+import { FieldSchema } from '@/hooks/useVoiceFormParser';
+
+// Field schema for voice parsing
+const patientFieldSchema: FieldSchema[] = [
+  { key: 'firstName', label: 'First Name', type: 'text' },
+  { key: 'middleName', label: 'Middle Name', type: 'text' },
+  { key: 'lastName', label: 'Last Name', type: 'text' },
+  { key: 'dob', label: 'Date of Birth', type: 'date' },
+  { key: 'mrn', label: 'Medical Record Number', type: 'text' },
+  { key: 'race', label: 'Race', type: 'select', options: ['white', 'black', 'asian', 'hispanic', 'native', 'pacific', 'other'] },
+  { key: 'gender', label: 'Gender', type: 'select', options: ['male', 'female', 'other', 'prefer-not'] },
+  { key: 'cellPhone', label: 'Cell Phone', type: 'phone' },
+  { key: 'email', label: 'Email Address', type: 'email' },
+  { key: 'streetAddress', label: 'Street Address', type: 'text' },
+  { key: 'city', label: 'City', type: 'text' },
+  { key: 'state', label: 'State', type: 'text' },
+  { key: 'zipCode', label: 'Zip Code', type: 'text' },
+];
 
 const AddPatient: React.FC = () => {
   const navigate = useNavigate();
@@ -27,6 +46,27 @@ const AddPatient: React.FC = () => {
   const [differentResponsibleParty, setDifferentResponsibleParty] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [patientData, setPatientData] = useState({ firstName: '', lastName: '', mrn: '' });
+  
+  // Form field states for voice input
+  const [formValues, setFormValues] = useState<Record<string, string>>({});
+  const [race, setRace] = useState('');
+  const [gender, setGender] = useState('');
+
+  const handleVoiceFieldsParsed = useCallback((parsedFields: Record<string, string>) => {
+    setFormValues(prev => ({ ...prev, ...parsedFields }));
+    
+    // Handle select fields separately
+    if (parsedFields.race) setRace(parsedFields.race);
+    if (parsedFields.gender) setGender(parsedFields.gender);
+    
+    // Update actual form inputs
+    Object.entries(parsedFields).forEach(([key, value]) => {
+      const input = document.getElementById(key) as HTMLInputElement;
+      if (input && key !== 'race' && key !== 'gender') {
+        input.value = value;
+      }
+    });
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,10 +98,16 @@ const AddPatient: React.FC = () => {
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Patient Information Section */}
         <div className="flex gap-8">
-          <h2 className="text-lg font-semibold text-foreground w-48 shrink-0">
-            Patient Information
-          </h2>
-          
+          <div className="w-48 shrink-0 space-y-3">
+            <h2 className="text-lg font-semibold text-foreground">
+              Patient Information
+            </h2>
+            <VoiceFormInput
+              context="patient_registration"
+              fields={patientFieldSchema}
+              onFieldsParsed={handleVoiceFieldsParsed}
+            />
+          </div>
           <div className="flex-1 space-y-6">
             {/* Row 1: Names and DOB */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -137,7 +183,7 @@ const AddPatient: React.FC = () => {
                 <Label htmlFor="race">
                   Race <span className="text-accent">*</span>
                 </Label>
-                <Select required>
+                <Select value={race} onValueChange={setRace} required>
                   <SelectTrigger className="bg-background">
                     <SelectValue placeholder="Select Race" />
                   </SelectTrigger>
@@ -156,7 +202,7 @@ const AddPatient: React.FC = () => {
                 <Label htmlFor="gender">
                   Gender <span className="text-accent">*</span>
                 </Label>
-                <Select required>
+                <Select value={gender} onValueChange={setGender} required>
                   <SelectTrigger className="bg-background">
                     <SelectValue placeholder="Select Gender" />
                   </SelectTrigger>
