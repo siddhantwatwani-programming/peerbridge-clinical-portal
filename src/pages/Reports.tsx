@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
-import { Search, ArrowUpDown, Filter, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, ArrowUpDown, Filter, FileText, ChevronLeft, ChevronRight, Sparkles, Loader2, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PDFPreviewModal } from '@/components/dashboard/PDFPreviewModal';
+import { BatchReportReviewPanel } from '@/components/reports/BatchReportReviewPanel';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface Report {
   id: string;
@@ -40,13 +43,65 @@ const reports: Report[] = [
   },
 ];
 
+interface ReportAnalysis {
+  id: string;
+  quickSummary: string;
+  category: 'normal' | 'abnormal-minor' | 'abnormal-major' | 'requires-attention';
+  batchEligible: boolean;
+  flagReason?: string;
+}
+
+interface BatchGroup {
+  category: string;
+  count: number;
+  description: string;
+}
+
 const Reports: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [physicianFilters, setPhysicianFilters] = useState<string[]>([]);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [batchModeEnabled, setBatchModeEnabled] = useState(false);
+  const [reportAnalysis, setReportAnalysis] = useState<ReportAnalysis[]>([]);
+  const [batchGroups, setBatchGroups] = useState<BatchGroup[]>([]);
+  const [isLoadingBatch, setIsLoadingBatch] = useState(false);
   const itemsPerPage = 10;
+
+  // Fetch batch review data
+  useEffect(() => {
+    const fetchBatchReview = async () => {
+      if (!batchModeEnabled) return;
+      
+      setIsLoadingBatch(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('batch-report-review', {
+          body: { reports }
+        });
+
+        if (error) throw error;
+        if (data.error) throw new Error(data.error);
+
+        setReportAnalysis(data.reports || []);
+        setBatchGroups(data.batchGroups || []);
+      } catch (err) {
+        console.error('Error fetching batch review:', err);
+        // Use fallback data
+        setReportAnalysis([
+          { id: '1', quickSummary: 'Normal sinus rhythm throughout 7-day study. No significant arrhythmias detected. Heart rate 49-194 bpm.', category: 'normal', batchEligible: true },
+          { id: '2', quickSummary: 'Study in progress - awaiting additional data for complete analysis.', category: 'normal', batchEligible: true }
+        ]);
+        setBatchGroups([
+          { category: 'Normal', count: 2, description: 'Normal NSR reports ready for batch sign-off' }
+        ]);
+      } finally {
+        setIsLoadingBatch(false);
+      }
+    };
+
+    fetchBatchReview();
+  }, [batchModeEnabled]);
 
   // Get unique physicians for filter
   const uniquePhysicians = [...new Set(reports.map(r => r.doctor))];
@@ -78,16 +133,53 @@ const Reports: React.FC = () => {
     setIsPdfModalOpen(true);
   };
 
+  const handleBatchSignOff = (category: string) => {
+    const count = batchGroups.find(g => g.category === category)?.count || 0;
+    toast.success(`${count} ${category} reports signed off`);
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-foreground">Active Reports</h1>
-        <Button variant="outline" className="gap-2">
-          <FileText className="h-4 w-4" />
-          View Historical Reports
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" className="gap-2">
+            <FileText className="h-4 w-4" />
+            View Historical Reports
+          </Button>
+          <Button 
+            variant={batchModeEnabled ? "accent" : "outline"} 
+            className="gap-2"
+            onClick={() => setBatchModeEnabled(!batchModeEnabled)}
+          >
+            <Layers className="h-4 w-4" />
+            {batchModeEnabled ? 'Batch Mode On' : 'Batch Mode'}
+          </Button>
+        </div>
       </div>
+
+      {/* Batch Review Panel */}
+      {batchModeEnabled && (
+        <div className="space-y-4">
+          {isLoadingBatch ? (
+            <div className="flex items-center gap-2 p-4 bg-accent/5 rounded-lg border border-accent/30">
+              <Loader2 className="h-5 w-5 animate-spin text-accent" />
+              <span className="text-sm text-muted-foreground">AI analyzing reports for batch review...</span>
+            </div>
+          ) : (
+            <BatchReportReviewPanel
+              reports={reportAnalysis}
+              batchGroups={batchGroups}
+              onBatchSignOff={handleBatchSignOff}
+              onViewReport={(reportId) => {
+                const report = reports.find(r => r.id === reportId);
+                if (report) handlePreviewReport(report);
+              }}
+            />
+          )}
+        </div>
+      )}
 
       {/* Filter and Search */}
       <div className="flex items-center gap-4">

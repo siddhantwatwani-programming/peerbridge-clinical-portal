@@ -11,6 +11,7 @@ import { ActiveEventsTable } from '@/components/dashboard/ActiveEventsTable';
 import { ActiveStudiesTable } from '@/components/dashboard/ActiveStudiesTable';
 import { PDFPreviewModal } from '@/components/dashboard/PDFPreviewModal';
 import { RegisterStudyModal } from '@/components/dashboard/RegisterStudyModal';
+import { PlatformHealthCard } from '@/components/dashboard/PlatformHealthCard';
 
 interface Report {
   id: string;
@@ -47,6 +48,9 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Platform Health Monitor for Site Admins */}
+      <PlatformHealthCard />
+
       {/* Top Filters Row */}
       <div className="flex items-center gap-4">
         <div className="flex-1 relative max-w-md">
