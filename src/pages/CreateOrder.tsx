@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Building2, Home, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SmartDeviceRecommendation } from '@/components/orders/SmartDeviceRecommendation';
+import { VoiceFormInput } from '@/components/voice/VoiceFormInput';
+import { FieldSchema } from '@/hooks/useVoiceFormParser';
 
 type OrderType = 'clinic' | 'home' | null;
 
@@ -56,6 +58,16 @@ const technicians = [
   { value: 'tech-3', label: 'Jane Smith' },
 ];
 
+// Field schema for voice parsing
+const orderFieldSchema: FieldSchema[] = [
+  { key: 'studyType', label: 'Study Type', type: 'select', options: ['14-day-xt', '30-day', '7-day', 'event-monitor'] },
+  { key: 'hasPacemaker', label: 'Pacemaker', type: 'select', options: ['yes', 'no'] },
+  { key: 'hasICD', label: 'ICD', type: 'select', options: ['yes', 'no'] },
+  { key: 'orderingPhysician', label: 'Ordering Physician', type: 'text' },
+  { key: 'primaryPhysician', label: 'Primary Physician', type: 'text' },
+  { key: 'notes', label: 'Notes', type: 'text' },
+];
+
 const CreateOrder: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -89,6 +101,25 @@ const CreateOrder: React.FC = () => {
   const [videoCallConsent, setVideoCallConsent] = useState<string | null>(null);
   const [hasDeviceAccess, setHasDeviceAccess] = useState<string | null>(null);
   const [homeSetupAgreed, setHomeSetupAgreed] = useState<string | null>(null);
+
+  // Voice input handler
+  const handleVoiceFieldsParsed = useCallback((parsedFields: Record<string, string>) => {
+    if (parsedFields.studyType) setStudyType(parsedFields.studyType);
+    if (parsedFields.hasPacemaker) setHasPacemaker(parsedFields.hasPacemaker);
+    if (parsedFields.hasICD) setHasICD(parsedFields.hasICD);
+    if (parsedFields.primaryPhysician) setPrimaryPhysician(parsedFields.primaryPhysician);
+    if (parsedFields.notes) setNotes(parsedFields.notes);
+    
+    // Try to match ordering physician
+    if (parsedFields.orderingPhysician) {
+      const matchedPhysician = physicians.find(p => 
+        p.label.toLowerCase().includes(parsedFields.orderingPhysician.toLowerCase())
+      );
+      if (matchedPhysician) {
+        setOrderingPhysician(matchedPhysician.value);
+      }
+    }
+  }, []);
 
   const addDiagnosisCode = (code: { code: string; description: string }) => {
     if (!selectedDiagnosisCodes.find(c => c.code === code.code && c.description === code.description)) {
@@ -167,6 +198,16 @@ const CreateOrder: React.FC = () => {
       {/* In Clinic Setup Form */}
       {orderType === 'clinic' && (
         <div className="space-y-6">
+          {/* Study Details Header with Voice Input */}
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-medium text-primary">Study Details</h3>
+            <VoiceFormInput
+              context="order_creation"
+              fields={orderFieldSchema}
+              onFieldsParsed={handleVoiceFieldsParsed}
+            />
+          </div>
+
           {/* Study Details */}
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">

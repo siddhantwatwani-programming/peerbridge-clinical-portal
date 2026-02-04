@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.platform-health]
 verify_jwt = false
+
+[functions.voice-form-parser]
+verify_jwt = false
