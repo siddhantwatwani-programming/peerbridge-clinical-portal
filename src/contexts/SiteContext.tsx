@@ -39,8 +39,8 @@ const DEMO_SITES: Site[] = [
 const DEMO_ROLE: SiteRole = {
   id: 'demo-role',
   site_id: 'demo-site-1',
-  name: 'Admin',
-  description: 'Demo Admin Role',
+  name: 'Physician',
+  description: 'Demo Physician Role',
   permissions: {
     can_view_patients: true,
     can_edit_patients: true,
