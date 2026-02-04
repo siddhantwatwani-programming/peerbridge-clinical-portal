@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Mic, MicOff, X, Check, Loader2, ChevronRight, Volume2 } from 'lucide-react';
+import { Mic, X, Check, Loader2, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useVoiceCommand } from '@/hooks/useVoiceCommand';
@@ -29,13 +29,33 @@ export function GuidedVoiceInput({
   const [isActive, setIsActive] = useState(false);
   const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
   const [capturedValues, setCapturedValues] = useState<Record<string, string>>({});
+  // Used for both TTS speaking and short UI transitions
   const [isProcessing, setIsProcessing] = useState(false);
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
   const [pendingValue, setPendingValue] = useState('');
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const isSpeakingRef = useRef(false);
+  const lastHandledFinalRef = useRef<string>('');
+  const isActiveRef = useRef(false);
+  const currentFieldIndexRef = useRef(0);
+  const awaitingConfirmationRef = useRef(false);
+  const isProcessingRef = useRef(false);
 
   const currentField = fields[currentFieldIndex];
   const isComplete = currentFieldIndex >= fields.length;
+
+  useEffect(() => {
+    isActiveRef.current = isActive;
+  }, [isActive]);
+  useEffect(() => {
+    currentFieldIndexRef.current = currentFieldIndex;
+  }, [currentFieldIndex]);
+  useEffect(() => {
+    awaitingConfirmationRef.current = awaitingConfirmation;
+  }, [awaitingConfirmation]);
+  useEffect(() => {
+    isProcessingRef.current = isProcessing;
+  }, [isProcessing]);
 
   // Text-to-speech function
   const speak = useCallback((text: string): Promise<void> => {
@@ -43,15 +63,30 @@ export function GuidedVoiceInput({
       if ('speechSynthesis' in window) {
         // Cancel any ongoing speech
         window.speechSynthesis.cancel();
-        
+
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 1.0;
         utterance.pitch = 1.0;
         utterance.volume = 1.0;
-        utterance.onend = () => resolve();
-        utterance.onerror = () => resolve();
+
+        // Some browsers occasionally fail to fire onend/onerror; add a timeout fallback.
+        // Keep this conservative to avoid hanging the flow on "Processing...".
+        const fallbackMs = Math.min(12000, Math.max(3500, Math.round(text.length * 55)));
+        let settled = false;
+        const settle = () => {
+          if (settled) return;
+          settled = true;
+          isSpeakingRef.current = false;
+          resolve();
+        };
+
+        isSpeakingRef.current = true;
+        utterance.onend = settle;
+        utterance.onerror = settle;
         speechSynthRef.current = utterance;
         window.speechSynthesis.speak(utterance);
+
+        window.setTimeout(settle, fallbackMs);
       } else {
         resolve();
       }
@@ -67,7 +102,16 @@ export function GuidedVoiceInput({
 
   // Process the captured transcript for the current field
   const processTranscript = useCallback((transcript: string) => {
-    if (!currentField || isProcessing) return;
+    // Ignore anything while we're speaking, processing, or waiting for user confirmation.
+    if (
+      !currentField ||
+      isSpeakingRef.current ||
+      isProcessingRef.current ||
+      awaitingConfirmationRef.current ||
+      !isActiveRef.current
+    ) {
+      return;
+    }
     
     let processedValue = transcript.trim();
     
@@ -111,10 +155,14 @@ export function GuidedVoiceInput({
 
   const voiceCommand = useVoiceCommand({
     onTranscript: (transcript, isFinal) => {
-      if (isFinal && transcript.trim() && !isProcessing) {
-        processTranscript(transcript);
-        voiceCommand.stopListening();
-      }
+      // We run recognition continuously once started from the click gesture.
+      // Only handle final results and de-dupe repeated finals.
+      if (!isFinal) return;
+      const t = transcript.trim();
+      if (!t) return;
+      if (t === lastHandledFinalRef.current) return;
+      lastHandledFinalRef.current = t;
+      processTranscript(t);
     },
     onError: (err) => {
       if (err === 'not-allowed') {
@@ -122,8 +170,20 @@ export function GuidedVoiceInput({
         setIsActive(false);
       }
     },
-    continuous: false
+    // Keep the microphone session alive after the initial user gesture.
+    continuous: true
   });
+
+  const askCurrentField = useCallback(async () => {
+    const idx = currentFieldIndexRef.current;
+    const field = fields[idx];
+    if (!field || !isActiveRef.current) return;
+    if (awaitingConfirmationRef.current) return;
+
+    setIsProcessing(true);
+    await speak(field.question);
+    setIsProcessing(false);
+  }, [fields, speak]);
 
   // Confirm the current value and move to next field
   const confirmValue = useCallback(async () => {
@@ -147,47 +207,48 @@ export function GuidedVoiceInput({
     const nextIndex = currentFieldIndex + 1;
     if (nextIndex < fields.length) {
       setCurrentFieldIndex(nextIndex);
+      // Immediately ask the next question (don't rely on effects).
+      // Small delay helps avoid overlapping UI updates in some browsers.
+      window.setTimeout(() => {
+        void askCurrentField();
+      }, 150);
     } else {
       // All fields complete
       await speak('All mandatory fields have been captured. You can review and submit.');
       onComplete();
       setIsActive(false);
     }
-  }, [currentField, pendingValue, currentFieldIndex, fields.length, onFieldCaptured, onComplete, speak]);
+  }, [currentField, pendingValue, currentFieldIndex, fields.length, onFieldCaptured, onComplete, speak, askCurrentField]);
 
   // Retry current field
   const retryField = useCallback(async () => {
     setAwaitingConfirmation(false);
     setPendingValue('');
     if (currentField) {
+      setIsProcessing(true);
       await speak(currentField.question);
-      voiceCommand.startListening();
+      setIsProcessing(false);
     }
-  }, [currentField, speak, voiceCommand]);
-
-  // Ask the current question when field changes
-  useEffect(() => {
-    if (isActive && currentField && !awaitingConfirmation && !isProcessing) {
-      const askQuestion = async () => {
-        setIsProcessing(true);
-        await speak(currentField.question);
-        setIsProcessing(false);
-        voiceCommand.startListening();
-      };
-      askQuestion();
-    }
-  }, [isActive, currentFieldIndex, currentField, awaitingConfirmation]);
+  }, [currentField, speak]);
 
   // Start the guided input
   const handleStart = useCallback(async () => {
+    // CRITICAL: startListening must happen directly in the click handler on some browsers.
+    voiceCommand.startListening();
+
+    lastHandledFinalRef.current = '';
     setIsActive(true);
     setCurrentFieldIndex(0);
     setCapturedValues({});
     setAwaitingConfirmation(false);
     setPendingValue('');
-    
-    await speak('Let me help you fill in the patient information. I will ask for each required field one by one.');
-  }, [speak]);
+
+    setIsProcessing(true);
+    await speak('Let me help you fill in the required patient fields one by one.');
+    setIsProcessing(false);
+
+    await askCurrentField();
+  }, [speak, voiceCommand, askCurrentField]);
 
   // Stop and close
   const handleClose = useCallback(() => {
@@ -198,6 +259,20 @@ export function GuidedVoiceInput({
     setAwaitingConfirmation(false);
     setPendingValue('');
   }, [stopSpeech, voiceCommand]);
+
+  // Safety: if we ever end up active but not speaking/listening/confirming for too long, re-ask.
+  useEffect(() => {
+    if (!isActive) return;
+    if (awaitingConfirmation) return;
+    if (isProcessing) return;
+    if (voiceCommand.isListening) return;
+    const t = window.setTimeout(() => {
+      if (isActiveRef.current && !awaitingConfirmationRef.current && !isProcessingRef.current && !voiceCommand.isListening) {
+        void askCurrentField();
+      }
+    }, 1200);
+    return () => window.clearTimeout(t);
+  }, [isActive, awaitingConfirmation, isProcessing, voiceCommand.isListening, askCurrentField]);
 
   if (!voiceCommand.isSupported) {
     return null;
