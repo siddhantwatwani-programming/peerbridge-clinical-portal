@@ -32,7 +32,11 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Patients', href: '/patients', icon: Users },
-  { label: 'Users', href: '/users', icon: UserCircle },
+  { label: 'Studies', href: '/studies', icon: FileText, badge: 246 },
+  { label: 'Patient Transmissions', href: '/transmissions', icon: Activity },
+  { label: 'Reports', href: '/reports', icon: FileText, badge: 2 },
+  { label: 'Site Settings', href: '/users', icon: Settings },
+  { label: 'Research', href: '/research', icon: FlaskConical },
   { 
     label: 'Inventory', 
     href: '/inventory',
@@ -42,12 +46,7 @@ const navItems: NavItem[] = [
       { label: 'Device Shipments', href: '/inventory/shipments' },
     ]
   },
-  { label: 'Reports', href: '/reports', icon: FileText, badge: 2 },
-  { label: 'Research', href: '/research', icon: FlaskConical },
-  { label: 'Patient Transmissions', href: '/transmissions', icon: Activity },
-  { label: 'Studies', href: '/studies', icon: FileText, badge: 246 },
-  { label: 'Site Settings', href: '/settings', icon: Settings },
-  { label: 'Site Admin', href: '/admin', icon: Building },
+  { label: 'Platform Analytics', href: '/analytics', icon: LayoutDashboard },
 ];
 
 export const TopNav: React.FC = () => {
