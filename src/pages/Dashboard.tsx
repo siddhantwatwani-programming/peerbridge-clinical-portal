@@ -49,7 +49,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Platform Health Monitor for Site Admins */}
-      <PlatformHealthCard />
+      <PlatformHealthCard onTabChange={setActiveTab} />
 
       {/* Top Filters Row */}
       <div className="flex items-center gap-4">
