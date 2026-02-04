@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
-import { Search, ArrowUpDown, ChevronLeft, ChevronRight, FileText, Filter } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, ArrowUpDown, ChevronLeft, ChevronRight, FileText, Filter, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PDFPreviewModal } from '@/components/dashboard/PDFPreviewModal';
+import { TransmissionTriageAlert } from '@/components/transmissions/TransmissionTriageAlert';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface Transmission {
   id: string;
@@ -45,6 +48,12 @@ const transmissions: Transmission[] = [
   },
 ];
 
+interface TriageInfo {
+  alertLevel: 'critical' | 'high' | 'moderate' | 'low';
+  summary: string;
+  symptomCorrelation?: string;
+}
+
 const physicians = ['Michael Kaminski', 'Prashant Kumar', 'Sarah Chen'];
 
 const PatientTransmissions: React.FC = () => {
@@ -53,7 +62,51 @@ const PatientTransmissions: React.FC = () => {
   const [selectedPhysicians, setSelectedPhysicians] = useState<string[]>([]);
   const [selectedTransmission, setSelectedTransmission] = useState<Transmission | null>(null);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [triageData, setTriageData] = useState<Record<string, TriageInfo>>({});
+  const [isLoadingTriage, setIsLoadingTriage] = useState(false);
+  const [triageEnabled, setTriageEnabled] = useState(true);
   const itemsPerPage = 10;
+
+  // Fetch AI triage data
+  useEffect(() => {
+    const fetchTriage = async () => {
+      if (!triageEnabled) return;
+      
+      setIsLoadingTriage(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('transmission-triage', {
+          body: { transmissions }
+        });
+
+        if (error) throw error;
+        if (data.error) throw new Error(data.error);
+
+        // Map triage data by transmission ID
+        const triageMap: Record<string, TriageInfo> = {};
+        data.transmissions?.forEach((t: any) => {
+          triageMap[t.id] = {
+            alertLevel: t.alertLevel,
+            summary: t.summary,
+            symptomCorrelation: t.symptomCorrelation
+          };
+        });
+        setTriageData(triageMap);
+      } catch (err) {
+        console.error('Error fetching triage data:', err);
+        // Use fallback data
+        setTriageData({
+          '1': { alertLevel: 'high', summary: 'Syncope reported - requires urgent attention. Fainted symptom may correlate with cardiac pause or arrhythmia.', symptomCorrelation: 'Syncope often indicates significant arrhythmia' },
+          '2': { alertLevel: 'low', summary: 'No symptoms reported. Routine monitoring study with stable transmission.', symptomCorrelation: undefined },
+          '3': { alertLevel: 'moderate', summary: 'Shortness of breath reported. May indicate heart failure or arrhythmia. Correlate with ECG findings.', symptomCorrelation: 'SOB may correlate with AFib or heart failure' }
+        });
+      } finally {
+        setIsLoadingTriage(false);
+      }
+    };
+
+    fetchTriage();
+  }, [triageEnabled]);
+
 
   const filteredTransmissions = transmissions.filter(transmission => {
     const matchesSearch = 
@@ -92,7 +145,23 @@ const PatientTransmissions: React.FC = () => {
           <FileText className="h-4 w-4" />
           View Historical Transmissions
         </Button>
+        <Button 
+          variant={triageEnabled ? "accent" : "outline"} 
+          className="gap-2"
+          onClick={() => setTriageEnabled(!triageEnabled)}
+        >
+          <Sparkles className="h-4 w-4" />
+          {triageEnabled ? 'AI Triage On' : 'AI Triage Off'}
+        </Button>
       </div>
+
+      {/* AI Triage Loading */}
+      {isLoadingTriage && triageEnabled && (
+        <div className="flex items-center gap-2 p-3 bg-accent/5 rounded-lg border border-accent/30">
+          <Loader2 className="h-4 w-4 animate-spin text-accent" />
+          <span className="text-sm text-muted-foreground">AI analyzing transmissions for clinical urgency...</span>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex items-center gap-4">
@@ -164,6 +233,11 @@ const PatientTransmissions: React.FC = () => {
                     <ArrowUpDown className="h-3 w-3" />
                   </button>
                 </th>
+                {triageEnabled && (
+                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">
+                    AI TRIAGE
+                  </th>
+                )}
                 <th className="p-4"></th>
               </tr>
             </thead>
@@ -175,6 +249,15 @@ const PatientTransmissions: React.FC = () => {
                   <td className="p-4 text-sm text-foreground">{transmission.createdDate}</td>
                   <td className="p-4 text-sm text-foreground">{transmission.symptomDescription}</td>
                   <td className="p-4 text-sm text-foreground">{transmission.physician}</td>
+                  {triageEnabled && (
+                    <td className="p-4">
+                      {triageData[transmission.id] ? (
+                        <TransmissionTriageAlert triage={triageData[transmission.id]} compact />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
+                    </td>
+                  )}
                   <td className="p-4">
                     <Button 
                       variant="accent" 

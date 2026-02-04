@@ -8,3 +8,18 @@ verify_jwt = false
 
 [functions.seed-demo-user]
 verify_jwt = false
+
+[functions.interpretation-assist]
+verify_jwt = false
+
+[functions.transmission-triage]
+verify_jwt = false
+
+[functions.batch-report-review]
+verify_jwt = false
+
+[functions.smart-device-assignment]
+verify_jwt = false
+
+[functions.platform-health]
+verify_jwt = false

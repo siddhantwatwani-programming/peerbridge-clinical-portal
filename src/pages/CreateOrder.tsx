@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SmartDeviceRecommendation } from '@/components/orders/SmartDeviceRecommendation';
 
 type OrderType = 'clinic' | 'home' | null;
 
@@ -237,6 +238,14 @@ const CreateOrder: React.FC = () => {
               />
             </div>
           </div>
+
+          {/* AI Smart Device Recommendation */}
+          <SmartDeviceRecommendation
+            studyType={studyType}
+            orderType={orderType}
+            patientName={patientName}
+            onSelectDevice={(deviceTag) => setServiceTag(deviceTag)}
+          />
 
           {/* Diagnosis Codes Section */}
           <div className="border-t border-border pt-6">

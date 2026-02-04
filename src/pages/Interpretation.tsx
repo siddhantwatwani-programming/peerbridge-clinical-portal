@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
+import { SmartInterpretationAssistant } from '@/components/interpretation/SmartInterpretationAssistant';
 
 interface StudyInfo {
   patientName: string;
@@ -157,6 +158,15 @@ const Interpretation: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* AI Smart Interpretation Assistant */}
+      <SmartInterpretationAssistant
+        studyFindings={studyFindingsSummary}
+        patientName={studyInfo.patientName}
+        studyType={studyInfo.studyType}
+        onSelectComment={(commentValue) => setSelectedComment(commentValue)}
+        onUseDraftNarrative={(narrative) => setProfessionalComments(narrative)}
+      />
 
       {/* Agreement & Comments Section */}
       <div className="bg-card rounded-xl border border-border shadow-sm p-6 space-y-6">
