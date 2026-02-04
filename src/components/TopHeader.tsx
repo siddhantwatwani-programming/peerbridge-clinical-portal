@@ -48,9 +48,7 @@ export const TopHeader: React.FC = () => {
               <span className="text-lg font-semibold text-foreground">
                 {currentSite.name}
               </span>
-              {sites.length > 1 && (
-                <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-              )}
+              <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
             </button>
           ) : (
             <span className="text-lg font-semibold text-foreground">Dev Clinic</span>

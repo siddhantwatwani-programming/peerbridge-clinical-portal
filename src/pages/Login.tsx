@@ -151,15 +151,9 @@ const Login: React.FC = () => {
           </div>
 
           {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'signin' | 'signup')} className="px-8 pb-8">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            </TabsList>
-
-            {/* Sign In Tab */}
-            <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-5">
+          <div className="px-8 pb-8">
+            {/* Sign In Form */}
+            <form onSubmit={handleSignIn} className="space-y-5">
                 {/* Email field */}
                 <div className="space-y-2">
                   <label htmlFor="signin-email" className="text-sm font-medium text-muted-foreground">
@@ -241,107 +235,7 @@ const Login: React.FC = () => {
                   )}
                 </Button>
               </form>
-            </TabsContent>
-
-            {/* Sign Up Tab */}
-            <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-5">
-                {/* Full Name field */}
-                <div className="space-y-2">
-                  <label htmlFor="signup-name" className="text-sm font-medium text-muted-foreground">
-                    Full Name
-                  </label>
-                  <div className={`relative transition-all duration-200 ${focusedField === 'name' ? 'transform scale-[1.02]' : ''}`}>
-                    <User className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 transition-colors duration-200 ${focusedField === 'name' ? 'text-accent' : 'text-muted-foreground'}`} />
-                    <input
-                      id="signup-name"
-                      type="text"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      onFocus={() => setFocusedField('name')}
-                      onBlur={() => setFocusedField(null)}
-                      placeholder="Dr. John Smith"
-                      className="w-full h-12 pl-12 pr-4 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground 
-                        focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent
-                        transition-all duration-200 hover:border-muted-foreground/50"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Email field */}
-                <div className="space-y-2">
-                  <label htmlFor="signup-email" className="text-sm font-medium text-muted-foreground">
-                    Email Address
-                  </label>
-                  <div className={`relative transition-all duration-200 ${focusedField === 'signup-email' ? 'transform scale-[1.02]' : ''}`}>
-                    <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 transition-colors duration-200 ${focusedField === 'signup-email' ? 'text-accent' : 'text-muted-foreground'}`} />
-                    <input
-                      id="signup-email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      onFocus={() => setFocusedField('signup-email')}
-                      onBlur={() => setFocusedField(null)}
-                      placeholder="demo@peerbridge.health"
-                      className="w-full h-12 pl-12 pr-4 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground 
-                        focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent
-                        transition-all duration-200 hover:border-muted-foreground/50"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Password field */}
-                <div className="space-y-2">
-                  <label htmlFor="signup-password" className="text-sm font-medium text-muted-foreground">
-                    Password
-                  </label>
-                  <div className={`relative transition-all duration-200 ${focusedField === 'signup-password' ? 'transform scale-[1.02]' : ''}`}>
-                    <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 transition-colors duration-200 ${focusedField === 'signup-password' ? 'text-accent' : 'text-muted-foreground'}`} />
-                    <input
-                      id="signup-password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      onFocus={() => setFocusedField('signup-password')}
-                      onBlur={() => setFocusedField(null)}
-                      placeholder="Min 6 characters"
-                      className="w-full h-12 pl-12 pr-12 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground 
-                        focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent
-                        transition-all duration-200 hover:border-muted-foreground/50"
-                      required
-                      minLength={6}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-accent transition-colors duration-200 p-1 rounded-full hover:bg-muted"
-                    >
-                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Sign Up button */}
-                <Button
-                  type="submit"
-                  className="w-full h-12 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-lg shadow-lg shadow-accent/25 
-                    transition-all duration-300 hover:shadow-xl hover:shadow-accent/30 hover:-translate-y-0.5 active:translate-y-0"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 border-2 border-accent-foreground/30 border-t-accent-foreground rounded-full animate-spin" />
-                      <span>Creating Account...</span>
-                    </div>
-                  ) : (
-                    'Create Account'
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+          </div>
 
           {/* HIPAA Badge */}
           <div className="px-8 pb-6">
