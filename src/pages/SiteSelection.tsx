@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Building, MapPin, Users, ChevronRight, LogOut } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { useSite } from '@/contexts/SiteContext';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { cn } from '@/lib/utils';
-import peerbridgeLogo from '@/assets/peerbridge-logo.jpg';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Building, MapPin, Users, ChevronRight, LogOut } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useSite } from "@/contexts/SiteContext";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
+import peerbridgeLogo from "@/assets/peerbridge-logo.jpg";
 
 const SiteSelection: React.FC = () => {
   const navigate = useNavigate();
@@ -25,9 +25,11 @@ const SiteSelection: React.FC = () => {
     }
 
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
-        navigate('/', { replace: true });
+        navigate("/", { replace: true });
       }
       setHasCheckedSession(true);
     };
@@ -42,13 +44,13 @@ const SiteSelection: React.FC = () => {
   useEffect(() => {
     if (!sitesLoading && sites.length === 1) {
       switchSite(sites[0].id);
-      navigate('/dashboard', { replace: true });
+      navigate("/dashboard", { replace: true });
     }
   }, [sites, sitesLoading, switchSite, navigate]);
 
   const handleSiteSelect = (siteId: string) => {
     switchSite(siteId);
-    navigate('/dashboard', { replace: true });
+    navigate("/dashboard", { replace: true });
   };
 
   const handleSignOut = async () => {
@@ -57,12 +59,12 @@ const SiteSelection: React.FC = () => {
     } else {
       await signOut();
     }
-    navigate('/', { replace: true });
+    navigate("/", { replace: true });
   };
 
   const getRoleName = (siteId: string): string => {
-    const membership = memberships.find(m => m.site_id === siteId);
-    return membership?.role?.name || 'Member';
+    const membership = memberships.find((m) => m.site_id === siteId);
+    return membership?.role?.name || "Member";
   };
 
   // Show loading only if not in demo mode and still loading
@@ -78,24 +80,22 @@ const SiteSelection: React.FC = () => {
   }
 
   return (
-    <div className={cn(
-      "min-h-screen flex flex-col",
-      isDemoMode 
-        ? "bg-gradient-to-br from-slate-50 via-white to-slate-100"
-        : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
-    )}>
+    <div
+      className={cn(
+        "min-h-screen flex flex-col",
+        isDemoMode
+          ? "bg-gradient-to-br from-slate-50 via-white to-slate-100"
+          : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900",
+      )}
+    >
       {/* Header */}
       <header className="w-full p-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img 
-            src={peerbridgeLogo} 
-            alt="Peerbridge Health" 
-            className="h-10 w-auto rounded-lg"
-          />
-          <span className={cn(
+          <img src={peerbridgeLogo} alt="Peerbridge Health" className="h-10 w-auto rounded-lg" />
+          {/* <span className={cn(
             "text-xl font-semibold",
             isDemoMode ? "text-foreground" : "text-white"
-          )}>Peerbridge Health</span>
+          )}>Peerbridge Health</span> */}
         </div>
         <div className="flex items-center gap-4">
           {isDemoMode && (
@@ -103,17 +103,12 @@ const SiteSelection: React.FC = () => {
               Demo Mode
             </Badge>
           )}
-          <span className="text-sm text-muted-foreground">
-            {isDemoMode ? 'Demo User' : user?.email}
-          </span>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <span className="text-sm text-muted-foreground">{isDemoMode ? "Demo User" : user?.email}</span>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleSignOut}
-            className={cn(
-              "text-muted-foreground",
-              isDemoMode ? "hover:text-foreground" : "hover:text-white"
-            )}
+            className={cn("text-muted-foreground", isDemoMode ? "hover:text-foreground" : "hover:text-white")}
           >
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
@@ -128,10 +123,7 @@ const SiteSelection: React.FC = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
               <Building className="h-8 w-8 text-primary" />
             </div>
-            <h1 className={cn(
-              "text-3xl font-bold mb-2",
-              isDemoMode ? "text-foreground" : "text-white"
-            )}>
+            <h1 className={cn("text-3xl font-bold mb-2", isDemoMode ? "text-foreground" : "text-white")}>
               Select a Clinical Site
             </h1>
             <p className="text-muted-foreground">
@@ -161,9 +153,9 @@ const SiteSelection: React.FC = () => {
                   <Card
                     key={site.id}
                     className={cn(
-                      'bg-card/50 backdrop-blur-sm border-border/50 cursor-pointer transition-all duration-200',
-                      'hover:border-primary/50 hover:bg-card/80 hover:shadow-lg hover:shadow-primary/5',
-                      'group'
+                      "bg-card/50 backdrop-blur-sm border-border/50 cursor-pointer transition-all duration-200",
+                      "hover:border-primary/50 hover:bg-card/80 hover:shadow-lg hover:shadow-primary/5",
+                      "group",
                     )}
                     onClick={() => handleSiteSelect(site.id)}
                   >
@@ -175,9 +167,7 @@ const SiteSelection: React.FC = () => {
                               <Building className="h-5 w-5 text-primary" />
                             </div>
                             <div className="min-w-0">
-                              <h3 className="font-semibold text-lg text-foreground truncate">
-                                {site.name}
-                              </h3>
+                              <h3 className="font-semibold text-lg text-foreground truncate">{site.name}</h3>
                               {site.address && (
                                 <p className="text-sm text-muted-foreground flex items-center gap-1.5 truncate">
                                   <MapPin className="h-3.5 w-3.5 shrink-0" />
