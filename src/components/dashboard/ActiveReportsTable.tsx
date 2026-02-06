@@ -7,15 +7,31 @@ interface Report {
   patient: string;
   studyType: string;
   startDate: string;
+  serviceTag: string;
+  studyDates: string;
 }
 
 const reports: Report[] = [
-  { id: '1', patient: 'Mike Kam', studyType: '7 Day XT Holter', startDate: '07/08/2025' },
-  { id: '2', patient: 'Ravii Choudhary', studyType: '7 Day XT Holter', startDate: '07/29/2025' },
+  { 
+    id: '1', 
+    patient: 'Mike Kam', 
+    studyType: '7 Day XT Holter', 
+    startDate: '07/08/2025',
+    serviceTag: 'VBG8S0QQCO',
+    studyDates: '07/08/2025 -04:02:08 AM - 07/09/2025 -04:01:14 AM'
+  },
+  { 
+    id: '2', 
+    patient: 'Ravii Choudhary', 
+    studyType: '7 Day XT Holter', 
+    startDate: '07/29/2025',
+    serviceTag: 'XYZ123ABC',
+    studyDates: '07/29/2025 -10:15:00 AM - 08/05/2025 -10:14:00 AM'
+  },
 ];
 
 interface ActiveReportsTableProps {
-  onPreviewReport: () => void;
+  onPreviewReport: (report: Report) => void;
 }
 
 export const ActiveReportsTable: React.FC<ActiveReportsTableProps> = ({ onPreviewReport }) => {
@@ -53,7 +69,7 @@ export const ActiveReportsTable: React.FC<ActiveReportsTableProps> = ({ onPrevie
                 </td>
                 <td className="p-4 text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <Button variant="accent" size="sm" onClick={onPreviewReport}>
+                    <Button variant="accent" size="sm" onClick={() => onPreviewReport(report)}>
                       <FileText className="h-4 w-4 mr-1" />
                       Preview Report
                     </Button>

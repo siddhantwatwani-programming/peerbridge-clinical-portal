@@ -40,6 +40,9 @@ interface PDFPreviewModalProps {
   patientName: string;
   studyType: string;
   reportId?: string;
+  showInterpretationButton?: boolean;
+  serviceTag?: string;
+  studyDates?: string;
 }
 
 export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
@@ -47,7 +50,10 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
   onClose,
   patientName,
   studyType,
-  reportId = '988f43f2-3c4c-a1b9-abde-0268013908bc'
+  reportId = '988f43f2-3c4c-a1b9-abde-0268013908bc',
+  showInterpretationButton = false,
+  serviceTag = 'VBG8S0QQCO',
+  studyDates = '07/08/2025 -04:02:08 AM - 07/09/2025 -04:01:14 AM'
 }) => {
   const navigate = useNavigate();
   const [numPages, setNumPages] = useState<number>(0);
@@ -348,6 +354,19 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
             <Button variant="accent" onClick={handleDownloadAll}>
               Download
             </Button>
+            {showInterpretationButton && (
+              <Button 
+                variant="accent" 
+                onClick={() => {
+                  onClose();
+                  navigate('/interpretation', {
+                    state: { patientName, studyType, serviceTag, studyDates, reportId }
+                  });
+                }}
+              >
+                Physician Interpretation
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>

@@ -18,11 +18,27 @@ interface Report {
   patient: string;
   studyType: string;
   startDate: string;
+  serviceTag: string;
+  studyDates: string;
 }
 
 const reports: Report[] = [
-  { id: '1', patient: 'Mike Kam', studyType: '7 Day XT Holter', startDate: '07/08/2025' },
-  { id: '2', patient: 'Ravii Choudhary', studyType: '7 Day XT Holter', startDate: '07/29/2025' },
+  { 
+    id: '1', 
+    patient: 'Mike Kam', 
+    studyType: '7 Day XT Holter', 
+    startDate: '07/08/2025',
+    serviceTag: 'VBG8S0QQCO',
+    studyDates: '07/08/2025 -04:02:08 AM - 07/09/2025 -04:01:14 AM'
+  },
+  { 
+    id: '2', 
+    patient: 'Ravii Choudhary', 
+    studyType: '7 Day XT Holter', 
+    startDate: '07/29/2025',
+    serviceTag: 'XYZ123ABC',
+    studyDates: '07/29/2025 -10:15:00 AM - 08/05/2025 -10:14:00 AM'
+  },
 ];
 
 const Dashboard: React.FC = () => {
@@ -187,6 +203,9 @@ const Dashboard: React.FC = () => {
         onClose={() => setIsPdfModalOpen(false)}
         patientName={selectedReport?.patient || ''}
         studyType={selectedReport?.studyType || ''}
+        showInterpretationButton={true}
+        serviceTag={selectedReport?.serviceTag}
+        studyDates={selectedReport?.studyDates}
       />
 
       <RegisterStudyModal 

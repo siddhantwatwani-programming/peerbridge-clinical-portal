@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Check, ChevronDown } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -13,12 +13,14 @@ import {
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 import { SmartInterpretationAssistant } from '@/components/interpretation/SmartInterpretationAssistant';
+import { PDFPreviewModal } from '@/components/dashboard/PDFPreviewModal';
 
 interface StudyInfo {
   patientName: string;
   serviceTag: string;
   studyType: string;
   studyDates: string;
+  reportId?: string;
 }
 
 const studyFindingsSummary = `The study duration was 6d 23h 38m.
@@ -51,27 +53,45 @@ const predefinedComments = [
   { value: 'afib-detected', label: 'Atrial fibrillation detected, recommend follow-up' },
 ];
 
+interface LocationState {
+  patientName?: string;
+  studyType?: string;
+  serviceTag?: string;
+  studyDates?: string;
+  reportId?: string;
+}
+
 const Interpretation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const state = location.state as { patientName?: string; studyType?: string } | null;
+  const state = location.state as LocationState | null;
 
   const [studyInfo] = useState<StudyInfo>({
     patientName: state?.patientName || 'Mike Kam',
-    serviceTag: 'VBG8S0QQCO',
+    serviceTag: state?.serviceTag || 'VBG8S0QQCO',
     studyType: state?.studyType || '7 Day XT Holter',
-    studyDates: '07/08/2025 -04:02:08 AM - 07/09/2025 -04:01:14 AM'
+    studyDates: state?.studyDates || '07/08/2025 -04:02:08 AM - 07/09/2025 -04:01:14 AM',
+    reportId: state?.reportId
   });
 
   const [agreementStatus, setAgreementStatus] = useState<string>('disagree');
   const [selectedComment, setSelectedComment] = useState<string>('');
-  const [professionalComments, setProfessionalComments] = useState<string>('test 2. mike');
+  const [professionalComments, setProfessionalComments] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSigned, setIsSigned] = useState(true);
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
   const signatureInfo = {
     signedBy: 'Site Admin',
-    signedDate: '01/27/2026 -06:58:34 AM'
+    signedDate: new Date().toLocaleString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    }).replace(',', ' -')
   };
 
   const handleSignAndSubmit = () => {
@@ -94,9 +114,7 @@ const Interpretation: React.FC = () => {
   };
 
   const handleReview = () => {
-    toast.info('Opening review panel...', {
-      description: 'Review the findings before final submission.'
-    });
+    setIsPdfModalOpen(true);
   };
 
   const handleReturnToDashboard = () => {
@@ -257,6 +275,16 @@ const Interpretation: React.FC = () => {
           </div>
         </div>
       </div>
+      {/* PDF Preview Modal for Review */}
+      <PDFPreviewModal 
+        isOpen={isPdfModalOpen}
+        onClose={() => setIsPdfModalOpen(false)}
+        patientName={studyInfo.patientName}
+        studyType={studyInfo.studyType}
+        serviceTag={studyInfo.serviceTag}
+        studyDates={studyInfo.studyDates}
+        showInterpretationButton={false}
+      />
     </div>
   );
 };
