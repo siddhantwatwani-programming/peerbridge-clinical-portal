@@ -101,50 +101,12 @@ Provide a comprehensive health assessment with actionable recommendations.`;
     let analysis;
     try {
       analysis = JSON.parse(content);
-    } catch (parseError) {
-      console.error('Initial parse failed, attempting cleanup:', parseError);
-      // Try to extract and clean JSON from response
+    } catch {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        try {
-          // Clean common JSON issues: trailing commas, unescaped quotes
-          let cleaned = jsonMatch[0]
-            .replace(/,\s*}/g, '}')  // Remove trailing commas before }
-            .replace(/,\s*]/g, ']')  // Remove trailing commas before ]
-            .replace(/[\x00-\x1F\x7F]/g, ' '); // Remove control characters
-          analysis = JSON.parse(cleaned);
-        } catch (cleanupError) {
-          console.error('Cleanup parse also failed:', cleanupError);
-          // Return a fallback response instead of failing
-          analysis = {
-            healthScore: 75,
-            status: 'healthy',
-            insights: [
-              {
-                type: 'info',
-                title: 'Analysis Temporarily Unavailable',
-                description: 'AI analysis encountered an issue. Showing default metrics.',
-                recommendation: 'Try refreshing in a moment.'
-              }
-            ],
-            predictions: [],
-            workloadSummary: {
-              pendingStudies: 0,
-              pendingReports: 0,
-              avgTurnaroundHours: 0,
-              bottleneck: null
-            }
-          };
-        }
+        analysis = JSON.parse(jsonMatch[0]);
       } else {
-        // Return fallback if no JSON found
-        analysis = {
-          healthScore: 75,
-          status: 'healthy',
-          insights: [],
-          predictions: [],
-          workloadSummary: { pendingStudies: 0, pendingReports: 0, avgTurnaroundHours: 0, bottleneck: null }
-        };
+        throw new Error('Failed to parse AI response');
       }
     }
 

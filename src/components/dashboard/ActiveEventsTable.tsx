@@ -26,7 +26,7 @@ export const ActiveEventsTable: React.FC = () => {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-border bg-muted/30">
+            <tr className="border-b border-border/40 bg-muted/20">
               <th className="text-left p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <button className="flex items-center gap-1.5 hover:text-foreground transition-colors">
                   Patient
@@ -44,7 +44,7 @@ export const ActiveEventsTable: React.FC = () => {
           </thead>
           <tbody>
             {events.map((event) => (
-              <tr key={event.id} className="border-b border-border/40 last:border-0 hover:bg-accent/[0.03] transition-colors">
+              <tr key={event.id} className="border-b border-border/30 last:border-0 hover:bg-muted/20 transition-colors">
                 <td className="p-4 text-sm font-medium text-foreground">
                   {event.patient}
                 </td>

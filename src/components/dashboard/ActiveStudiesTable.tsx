@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowUpDown, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface Study {
   id: string;
@@ -28,7 +29,7 @@ export const ActiveStudiesTable: React.FC = () => {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-border bg-muted/30">
+            <tr className="border-b border-border/40 bg-muted/20">
               {['Patient', 'Study Type', 'Order Status', 'Start Date'].map((header) => (
                 <th key={header} className="text-left p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   <button className="flex items-center gap-1.5 hover:text-foreground transition-colors">
@@ -50,7 +51,7 @@ export const ActiveStudiesTable: React.FC = () => {
               </tr>
             ) : (
               studies.map((study) => (
-                <tr key={study.id} className="border-b border-border/40 last:border-0 hover:bg-accent/[0.03] transition-colors">
+                <tr key={study.id} className="border-b border-border/30 last:border-0 hover:bg-muted/20 transition-colors">
                   <td className="p-4 text-sm font-medium text-foreground">
                     {study.patient}
                   </td>
@@ -58,11 +59,9 @@ export const ActiveStudiesTable: React.FC = () => {
                     {study.studyType}
                   </td>
                   <td className="p-4">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                      study.orderStatus === 'Active' ? 'bg-accent/10 text-accent' : 'bg-muted text-muted-foreground'
-                    }`}>
+                    <Badge variant={study.orderStatus === 'Active' ? 'default' : 'secondary'} className="rounded-lg text-xs font-medium">
                       {study.orderStatus}
-                    </span>
+                    </Badge>
                   </td>
                   <td className="p-4 text-sm text-muted-foreground">
                     {study.startDate}

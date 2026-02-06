@@ -47,7 +47,7 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="p-6 lg:p-8 space-y-8 max-w-[1600px] mx-auto animate-fade-in">
+    <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
       {/* Platform Health Monitor */}
       <PlatformHealthCard onTabChange={setActiveTab} />
 
@@ -61,7 +61,7 @@ const Dashboard: React.FC = () => {
             className="input-medical w-full pl-10 h-10 text-sm"
           />
         </div>
-        <Button variant="outline" className="gap-2 rounded-xl h-10 text-sm border-border">
+        <Button variant="outline" className="gap-2 rounded-xl h-10 text-sm">
           <Filter className="h-4 w-4" />
           Filter by Physician
         </Button>
@@ -74,13 +74,17 @@ const Dashboard: React.FC = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+        <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start gap-6 h-auto p-0">
           {[
             { value: 'reports', label: 'Active Reports' },
             { value: 'events', label: 'Active Events' },
             { value: 'studies', label: 'Active Studies' },
           ].map(tab => (
-            <TabsTrigger key={tab.value} value={tab.value}>
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="data-[state=active]:border-b-2 data-[state=active]:border-accent data-[state=active]:text-foreground rounded-none bg-transparent px-0 pb-3 text-muted-foreground data-[state=active]:shadow-none font-medium text-sm"
+            >
               {tab.label}
             </TabsTrigger>
           ))}
@@ -135,7 +139,7 @@ const Dashboard: React.FC = () => {
                   </thead>
                   <tbody>
                     {reports.map((report) => (
-                      <tr key={report.id} className="border-b border-border/40 last:border-0 hover:bg-accent/[0.03] transition-colors">
+                      <tr key={report.id} className="border-b border-border/40 last:border-0 hover:bg-muted/30 transition-colors">
                         <td className="p-4 text-sm font-medium text-foreground">
                           {report.patient}
                         </td>
@@ -155,7 +159,7 @@ const Dashboard: React.FC = () => {
                             >
                               Preview Report
                             </Button>
-                            <Button variant="outline" size="sm" className="rounded-lg text-xs border-border">
+                            <Button variant="outline" size="sm" className="rounded-lg text-xs">
                               Send to history
                             </Button>
                           </div>
