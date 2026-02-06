@@ -139,37 +139,24 @@ const NursePulse: React.FC = () => {
 
       {/* Filters */}
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 p-1 bg-secondary rounded-lg">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              filter === 'all' 
-                ? 'bg-card text-foreground shadow-sm' 
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            All Patients
-          </button>
-          <button
-            onClick={() => setFilter('new')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              filter === 'new' 
-                ? 'bg-card text-foreground shadow-sm' 
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            New Findings
-          </button>
-          <button
-            onClick={() => setFilter('awaiting')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              filter === 'awaiting' 
-                ? 'bg-card text-foreground shadow-sm' 
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Awaiting Doctor Review
-          </button>
+        <div className="inline-flex items-center border-b border-border">
+          {[
+            { value: 'all', label: 'All Patients' },
+            { value: 'new', label: 'New Findings' },
+            { value: 'awaiting', label: 'Awaiting Doctor Review' },
+          ].map(tab => (
+            <button
+              key={tab.value}
+              onClick={() => setFilter(tab.value as 'all' | 'new' | 'awaiting')}
+              className={`relative px-4 py-2.5 text-sm font-medium transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:rounded-full after:transition-all after:duration-200 ${
+                filter === tab.value 
+                  ? 'text-accent after:bg-accent' 
+                  : 'text-muted-foreground hover:text-foreground after:bg-transparent'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         <div className="flex-1 relative">

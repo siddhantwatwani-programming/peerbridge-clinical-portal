@@ -74,17 +74,13 @@ const Dashboard: React.FC = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start gap-6 h-auto p-0">
+        <TabsList>
           {[
             { value: 'reports', label: 'Active Reports' },
             { value: 'events', label: 'Active Events' },
             { value: 'studies', label: 'Active Studies' },
           ].map(tab => (
-            <TabsTrigger
-              key={tab.value}
-              value={tab.value}
-              className="data-[state=active]:border-b-2 data-[state=active]:border-accent data-[state=active]:text-foreground rounded-none bg-transparent px-0 pb-3 text-muted-foreground data-[state=active]:shadow-none font-medium text-sm"
-            >
+            <TabsTrigger key={tab.value} value={tab.value}>
               {tab.label}
             </TabsTrigger>
           ))}
