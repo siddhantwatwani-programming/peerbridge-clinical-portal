@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserCircle, Settings, LogOut, Building, ChevronDown } from 'lucide-react';
+import { UserCircle, Settings, LogOut, Building, ChevronDown, Bell } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useSite } from '@/contexts/SiteContext';
 import { useAuth } from '@/hooks/useAuth';
 import { SiteSwitcherModal } from '@/components/SiteSwitcherModal';
@@ -34,53 +35,61 @@ export const TopHeader: React.FC = () => {
 
   return (
     <>
-      <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6">
-        {/* Site Name with switcher indicator */}
+      <header className="h-16 bg-card/80 backdrop-blur-md border-b border-border/60 flex items-center justify-between px-6 sticky top-0 z-40">
+        {/* Left — Site */}
         <div className="flex items-center gap-3">
           {isLoading ? (
-            <div className="h-5 w-32 bg-muted animate-pulse rounded" />
+            <div className="h-5 w-32 bg-muted animate-pulse rounded-lg" />
           ) : currentSite ? (
             <button
               onClick={() => setSiteSwitcherOpen(true)}
-              className="flex items-center gap-2 hover:bg-accent/50 px-3 py-2 rounded-lg transition-colors group"
+              className="flex items-center gap-2 hover:bg-muted px-3 py-2 rounded-xl transition-all duration-200 group"
             >
-              <Building className="h-5 w-5 text-primary" />
-              <span className="text-lg font-semibold text-foreground">
+              <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                <Building className="h-4 w-4 text-accent" />
+              </div>
+              <span className="text-sm font-semibold text-foreground">
                 {currentSite.name}
               </span>
-              <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
             </button>
           ) : (
-            <span className="text-lg font-semibold text-foreground">Dev Clinic</span>
+            <span className="text-sm font-semibold text-foreground">Dev Clinic</span>
           )}
 
           {currentRole && (
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className="text-xs font-medium rounded-lg">
               {currentRole.name}
             </Badge>
           )}
         </div>
 
-        {/* Right side */}
-        <div className="flex items-center gap-4">
+        {/* Right */}
+        <div className="flex items-center gap-2">
           {profile && (
-            <span className="text-sm text-muted-foreground hidden md:block">
+            <span className="text-xs text-muted-foreground hidden md:block mr-2">
               {profile.specialty || 'Clinician'}
             </span>
           )}
+
+          {/* Notifications */}
+          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground relative">
+            <Bell className="h-4 w-4" />
+            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-accent" />
+          </Button>
           
-          {/* Profile dropdown */}
+          {/* Profile */}
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center focus:outline-none">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium hover:bg-primary/20 transition-colors">
-                {isAuthenticated ? initials : <UserCircle className="h-6 w-6" />}
+              <div className="h-9 w-9 rounded-xl bg-accent/10 flex items-center justify-center text-accent font-semibold text-sm hover:bg-accent/20 transition-colors">
+                {isAuthenticated ? initials : <UserCircle className="h-5 w-5" />}
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-popover border border-border shadow-lg w-56">
+            <DropdownMenuContent align="end" className="bg-popover border border-border shadow-xl rounded-xl w-56">
               {profile && (
                 <>
-                  <div className="px-3 py-2">
-                    <p className="text-sm font-medium text-foreground">{displayName}</p>
+                  <div className="px-3 py-2.5">
+                    <p className="text-sm font-semibold text-foreground">{displayName}</p>
                     <p className="text-xs text-muted-foreground">{profile.email}</p>
                   </div>
                   <DropdownMenuSeparator />
@@ -90,7 +99,7 @@ export const TopHeader: React.FC = () => {
               {sites.length > 1 && (
                 <>
                   <DropdownMenuItem 
-                    className="cursor-pointer"
+                    className="cursor-pointer rounded-lg mx-1"
                     onClick={() => setSiteSwitcherOpen(true)}
                   >
                     <Building className="mr-2 h-4 w-4" />
@@ -103,11 +112,11 @@ export const TopHeader: React.FC = () => {
                 </>
               )}
 
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer rounded-lg mx-1">
                 <UserCircle className="mr-2 h-4 w-4" />
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer rounded-lg mx-1">
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </DropdownMenuItem>
@@ -115,7 +124,7 @@ export const TopHeader: React.FC = () => {
               
               {isAuthenticated ? (
                 <DropdownMenuItem 
-                  className="cursor-pointer text-destructive focus:text-destructive"
+                  className="cursor-pointer text-destructive focus:text-destructive rounded-lg mx-1"
                   onClick={handleLogout}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
@@ -123,7 +132,7 @@ export const TopHeader: React.FC = () => {
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem asChild>
-                  <Link to="/" className="cursor-pointer text-destructive">
+                  <Link to="/" className="cursor-pointer text-destructive rounded-lg mx-1">
                     <LogOut className="mr-2 h-4 w-4" />
                     Login
                   </Link>

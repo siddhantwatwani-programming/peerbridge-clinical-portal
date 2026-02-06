@@ -1,126 +1,123 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Peerbridge Health Design System
-   Navy (#1D2B44) + Orange (#F05A28) + Professional White
-   All colors in HSL for consistency
-*/
+/* Peerbridge Health — Futuristic Orange & White Design System */
 
 @layer base {
   :root {
-    /* Core Brand Colors */
-    --background: 210 20% 98%;
-    --foreground: 214 40% 19%;
+    /* Core surfaces — warm white with subtle warmth */
+    --background: 30 20% 98%;
+    --foreground: 220 20% 16%;
 
     --card: 0 0% 100%;
-    --card-foreground: 214 40% 19%;
+    --card-foreground: 220 20% 16%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 214 40% 19%;
+    --popover-foreground: 220 20% 16%;
 
-    /* Navy - Primary */
-    --primary: 214 40% 19%;
+    /* Primary — Deep charcoal for text/anchors */
+    --primary: 220 20% 16%;
     --primary-foreground: 0 0% 100%;
 
-    /* Light Navy - Secondary */
-    --secondary: 214 30% 95%;
-    --secondary-foreground: 214 40% 19%;
+    /* Secondary — Soft neutral */
+    --secondary: 30 12% 95%;
+    --secondary-foreground: 220 20% 16%;
 
-    /* Muted surfaces */
-    --muted: 214 20% 96%;
-    --muted-foreground: 214 20% 45%;
+    /* Muted — Whisper grey */
+    --muted: 30 10% 94%;
+    --muted-foreground: 220 10% 46%;
 
-    /* Peerbridge Orange - Accent/CTA */
-    --accent: 14 87% 55%;
+    /* Accent — Refined Peerbridge Orange */
+    --accent: 18 90% 54%;
     --accent-foreground: 0 0% 100%;
 
-    /* Destructive - Error states */
-    --destructive: 0 84% 60%;
+    /* Destructive */
+    --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Success - Green for positive findings */
-    --success: 142 71% 45%;
+    /* Success */
+    --success: 152 60% 42%;
     --success-foreground: 0 0% 100%;
 
-    /* Warning - Amber for attention */
+    /* Warning */
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    /* Clinical severity levels */
-    --severity-low: 142 71% 45%;
+    /* Severity */
+    --severity-low: 152 60% 42%;
     --severity-medium: 38 92% 50%;
-    --severity-high: 0 84% 60%;
-    --severity-critical: 0 90% 45%;
+    --severity-high: 0 72% 55%;
+    --severity-critical: 0 80% 42%;
 
-    /* Borders and inputs */
-    --border: 214 20% 88%;
-    --input: 214 20% 88%;
-    --ring: 14 87% 55%;
+    /* Borders & inputs */
+    --border: 220 12% 90%;
+    --input: 220 12% 90%;
+    --ring: 18 90% 54%;
 
-    --radius: 0.625rem;
+    --radius: 0.75rem;
 
-    /* Glassmorphism */
-    --glass-bg: 214 40% 19% / 0.08;
-    --glass-border: 0 0% 100% / 0.2;
-    --glass-shadow: 214 40% 19% / 0.1;
+    /* Glass */
+    --glass-bg: 220 20% 16% / 0.04;
+    --glass-border: 220 12% 90% / 0.6;
+    --glass-shadow: 220 20% 16% / 0.06;
 
-    /* Sidebar */
-    --sidebar-background: 214 40% 19%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 14 87% 55%;
+    /* Sidebar — clean white sidebar with orange accents */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 20% 16%;
+    --sidebar-primary: 18 90% 54%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 214 35% 25%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 214 35% 25%;
-    --sidebar-ring: 14 87% 55%;
+    --sidebar-accent: 30 20% 97%;
+    --sidebar-accent-foreground: 220 20% 16%;
+    --sidebar-border: 220 12% 92%;
+    --sidebar-ring: 18 90% 54%;
   }
 
   .dark {
-    --background: 214 40% 10%;
-    --foreground: 210 20% 98%;
+    --background: 220 20% 7%;
+    --foreground: 30 20% 95%;
 
-    --card: 214 40% 14%;
-    --card-foreground: 210 20% 98%;
+    --card: 220 18% 10%;
+    --card-foreground: 30 20% 95%;
 
-    --popover: 214 40% 14%;
-    --popover-foreground: 210 20% 98%;
+    --popover: 220 18% 10%;
+    --popover-foreground: 30 20% 95%;
 
-    --primary: 0 0% 100%;
-    --primary-foreground: 214 40% 19%;
+    --primary: 30 20% 95%;
+    --primary-foreground: 220 20% 7%;
 
-    --secondary: 214 30% 20%;
-    --secondary-foreground: 210 20% 98%;
+    --secondary: 220 16% 14%;
+    --secondary-foreground: 30 20% 95%;
 
-    --muted: 214 30% 20%;
-    --muted-foreground: 214 20% 65%;
+    --muted: 220 16% 14%;
+    --muted-foreground: 220 10% 55%;
 
-    --accent: 14 87% 55%;
+    --accent: 18 90% 54%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;
+    --success: 152 60% 42%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 214 30% 25%;
-    --input: 214 30% 25%;
-    --ring: 14 87% 55%;
+    --border: 220 16% 18%;
+    --input: 220 16% 18%;
+    --ring: 18 90% 54%;
 
-    --sidebar-background: 214 45% 12%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 14 87% 55%;
+    --sidebar-background: 220 20% 9%;
+    --sidebar-foreground: 30 20% 95%;
+    --sidebar-primary: 18 90% 54%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 214 35% 20%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 214 35% 20%;
-    --sidebar-ring: 14 87% 55%;
+    --sidebar-accent: 220 16% 13%;
+    --sidebar-accent-foreground: 30 20% 95%;
+    --sidebar-border: 220 16% 16%;
+    --sidebar-ring: 18 90% 54%;
   }
 }
 
@@ -130,38 +127,38 @@
   }
 
   html {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', 'DM Sans', system-ui, sans-serif;
+  }
 }
 
 @layer components {
-  /* Glass morphism panel */
+  /* Glass panel */
   .glass-panel {
-    @apply relative overflow-hidden rounded-xl;
-    background: linear-gradient(
-      135deg,
-      hsl(var(--glass-bg)),
-      hsl(214 40% 19% / 0.04)
-    );
-    backdrop-filter: blur(20px);
+    @apply relative overflow-hidden rounded-2xl;
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(24px);
     border: 1px solid hsl(var(--glass-border));
     box-shadow: 0 8px 32px hsl(var(--glass-shadow));
   }
 
-  /* Card with subtle hover */
+  /* Card hover */
   .card-hover {
     @apply transition-all duration-300 ease-out;
   }
   .card-hover:hover {
-    @apply shadow-lg -translate-y-0.5;
-    box-shadow: 0 10px 40px -10px hsl(var(--accent) / 0.2);
+    @apply -translate-y-0.5;
+    box-shadow: 0 12px 40px -8px hsl(var(--accent) / 0.12);
   }
 
-  /* Status chip base */
+  /* Status chip */
   .status-chip {
     @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium;
     @apply transition-all duration-200 cursor-pointer;
@@ -170,70 +167,34 @@
     @apply scale-105;
   }
 
-  /* Severity glow effects */
+  /* Severity glows */
   .severity-glow-high {
-    box-shadow: 0 0 20px hsl(var(--severity-high) / 0.4),
-                0 0 40px hsl(var(--severity-high) / 0.2);
+    box-shadow: 0 0 20px hsl(var(--severity-high) / 0.3),
+                0 0 40px hsl(var(--severity-high) / 0.15);
   }
   .severity-glow-critical {
     animation: critical-pulse 2s ease-in-out infinite;
   }
 
-  /* Loading skeleton with shimmer */
+  /* Skeleton shimmer */
   .skeleton-shimmer {
-    @apply relative overflow-hidden bg-muted;
+    @apply relative overflow-hidden bg-muted rounded-lg;
   }
   .skeleton-shimmer::after {
     content: '';
     @apply absolute inset-0;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      hsl(0 0% 100% / 0.4),
-      transparent
-    );
+    background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.5), transparent);
     animation: shimmer 2s infinite;
   }
 
-  /* Button ripple effect */
-  .btn-ripple {
-    @apply relative overflow-hidden;
-  }
-  .btn-ripple::after {
-    content: '';
-    @apply absolute inset-0 opacity-0;
-    background: radial-gradient(circle, hsl(0 0% 100% / 0.3) 10%, transparent 10.01%);
-    transform: scale(10);
-    transition: opacity 0.5s, transform 0.5s;
-  }
-  .btn-ripple:active::after {
-    @apply opacity-100;
-    transform: scale(0);
-    transition: 0s;
+  /* Medical input */
+  .input-medical {
+    @apply border border-border rounded-xl px-4 py-3 bg-background;
+    @apply transition-all duration-200;
+    @apply focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/10;
   }
 
-  /* AI message bubble */
-  .ai-bubble {
-    @apply relative p-4 rounded-2xl rounded-bl-md;
-    background: linear-gradient(135deg, hsl(214 40% 19%), hsl(214 35% 25%));
-    color: white;
-  }
-  .ai-bubble::before {
-    content: '';
-    @apply absolute -left-2 bottom-2 w-4 h-4;
-    background: inherit;
-    clip-path: polygon(100% 0, 0 100%, 100% 100%);
-  }
-
-  /* Medical trust badge */
-  .trust-badge {
-    @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium;
-    background: linear-gradient(135deg, hsl(142 71% 45% / 0.15), hsl(142 71% 45% / 0.05));
-    color: hsl(142 50% 35%);
-    border: 1px solid hsl(142 71% 45% / 0.3);
-  }
-
-  /* Table row hover */
+  /* Table row */
   .table-row-hover {
     @apply transition-colors duration-150;
   }
@@ -241,40 +202,26 @@
     @apply bg-muted/50;
   }
 
-  /* Input focus ring */
-  .input-medical {
-    @apply border-2 border-border rounded-lg px-4 py-3;
-    @apply transition-all duration-200;
-    @apply focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/10;
+  /* Trust badge */
+  .trust-badge {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium;
+    background: hsl(var(--success) / 0.08);
+    color: hsl(152 50% 32%);
+    border: 1px solid hsl(var(--success) / 0.2);
   }
 
-  /* Navigation link */
-  .nav-link {
-    @apply relative px-4 py-2 text-sm font-medium transition-colors duration-200;
-    @apply text-muted-foreground hover:text-foreground;
-  }
-  .nav-link.active {
-    @apply text-foreground;
-  }
-  .nav-link.active::after {
-    content: '';
-    @apply absolute bottom-0 left-4 right-4 h-0.5 bg-accent rounded-full;
+  /* AI bubble */
+  .ai-bubble {
+    @apply relative p-4 rounded-2xl rounded-bl-md;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(220 18% 24%));
+    color: white;
   }
 
-  /* ECG line animation */
-  .ecg-line {
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 1000;
-    animation: ecg-draw 3s linear infinite;
-  }
-}
-
-@layer utilities {
-  /* Confidence meter gradient */
+  /* Confidence gradient */
   .confidence-gradient {
-    background: linear-gradient(90deg, 
-      hsl(var(--severity-high)) 0%, 
-      hsl(var(--warning)) 50%, 
+    background: linear-gradient(90deg,
+      hsl(var(--severity-high)) 0%,
+      hsl(var(--warning)) 50%,
       hsl(var(--success)) 100%
     );
   }
@@ -287,31 +234,32 @@
 }
 
 @keyframes critical-pulse {
-  0%, 100% { 
-    box-shadow: 0 0 20px hsl(var(--severity-critical) / 0.4),
-                0 0 40px hsl(var(--severity-critical) / 0.2);
+  0%, 100% {
+    box-shadow: 0 0 20px hsl(var(--severity-critical) / 0.3),
+                0 0 40px hsl(var(--severity-critical) / 0.15);
   }
-  50% { 
-    box-shadow: 0 0 30px hsl(var(--severity-critical) / 0.6),
-                0 0 60px hsl(var(--severity-critical) / 0.3);
+  50% {
+    box-shadow: 0 0 30px hsl(var(--severity-critical) / 0.5),
+                0 0 60px hsl(var(--severity-critical) / 0.25);
   }
-}
-
-@keyframes ecg-draw {
-  to { stroke-dashoffset: 0; }
 }
 
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes scale-in {
-  from { opacity: 0; transform: scale(0.95); }
+  from { opacity: 0; transform: scale(0.96); }
   to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes slide-in-right {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
 }

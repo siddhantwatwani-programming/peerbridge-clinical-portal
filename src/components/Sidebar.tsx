@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
-  UserCircle,
   Package, 
   FileText, 
   FlaskConical,
@@ -12,7 +11,6 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
-  ChevronLeft,
   PanelLeftClose,
   PanelLeft
 } from 'lucide-react';
@@ -84,9 +82,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
             <Link
               to={item.href}
               className={cn(
-                "flex items-center justify-center p-3 transition-colors",
-                "text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10",
-                active && "bg-accent text-accent-foreground"
+                "flex items-center justify-center p-3 rounded-xl mx-2 transition-all duration-200",
+                "text-muted-foreground hover:text-foreground hover:bg-muted",
+                active && "bg-accent/10 text-accent"
               )}
             >
               <Icon className="h-5 w-5" />
@@ -104,16 +102,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
       <Link
         to={item.href}
         className={cn(
-          "flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors",
-          "text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10",
-          active && "bg-accent text-accent-foreground"
+          "flex items-center gap-3 px-4 py-2.5 mx-3 rounded-xl text-sm font-medium transition-all duration-200",
+          "text-muted-foreground hover:text-foreground hover:bg-muted",
+          active && "bg-accent/10 text-accent font-semibold"
         )}
       >
-        <Icon className="h-5 w-5" />
+        <Icon className={cn("h-5 w-5", active && "text-accent")} />
         <span className="flex-1">{item.label}</span>
         {item.badge && (
-          <span className="text-xs text-primary-foreground/50">
-            ({item.badge})
+          <span className={cn(
+            "text-xs px-2 py-0.5 rounded-full font-medium",
+            active ? "bg-accent/20 text-accent" : "bg-muted text-muted-foreground"
+          )}>
+            {item.badge}
           </span>
         )}
       </Link>
@@ -123,19 +124,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   return (
     <aside 
       className={cn(
-        "fixed left-0 top-0 h-screen bg-primary flex flex-col z-50 transition-all duration-300 ease-in-out",
+        "fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border flex flex-col z-50 transition-all duration-300 ease-in-out",
         collapsed ? "w-16" : "w-60"
       )}
     >
       {/* Logo */}
-      <div className="p-4 border-b border-primary-foreground/10 flex items-center justify-between">
+      <div className="p-4 flex items-center justify-between">
         <Link to="/dashboard" className="flex items-center gap-3">
           <PeerbridgeLogo size="sm" showText={!collapsed} />
         </Link>
       </div>
 
+      {/* Divider */}
+      <div className="mx-4 mb-2">
+        <div className="h-px bg-border" />
+      </div>
+
       {/* Navigation */}
-      <nav className="flex-1 py-4 overflow-y-auto">
+      <nav className="flex-1 py-2 overflow-y-auto space-y-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const hasChildren = item.children && item.children.length > 0;
@@ -150,9 +156,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                     <Link
                       to={item.href}
                       className={cn(
-                        "flex items-center justify-center p-3 transition-colors",
-                        "text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10",
-                        active && "bg-accent text-accent-foreground"
+                        "flex items-center justify-center p-3 rounded-xl mx-2 transition-all duration-200",
+                        "text-muted-foreground hover:text-foreground hover:bg-muted",
+                        active && "bg-accent/10 text-accent"
                       )}
                     >
                       <Icon className="h-5 w-5" />
@@ -170,12 +176,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                 <button
                   onClick={() => toggleExpand(item.label)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors",
-                    "text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10",
-                    active && "bg-accent text-accent-foreground"
+                    "w-full flex items-center gap-3 px-4 py-2.5 mx-3 rounded-xl text-sm font-medium transition-all duration-200",
+                    "text-muted-foreground hover:text-foreground hover:bg-muted",
+                    active && "bg-accent/10 text-accent",
+                    !collapsed && "max-w-[calc(100%-1.5rem)]"
                   )}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className={cn("h-5 w-5", active && "text-accent")} />
                   <span className="flex-1 text-left">{item.label}</span>
                   {isExpanded ? (
                     <ChevronDown className="h-4 w-4" />
@@ -184,15 +191,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                   )}
                 </button>
                 {isExpanded && (
-                  <div className="ml-12 border-l border-primary-foreground/20">
+                  <div className="ml-10 mr-3 mt-1 space-y-0.5 border-l-2 border-border pl-3">
                     {item.children.map((child) => (
                       <Link
                         key={child.href}
                         to={child.href}
                         className={cn(
-                          "block px-4 py-2 text-sm transition-colors",
-                          "text-primary-foreground/60 hover:text-primary-foreground",
-                          isActive(child.href) && "text-accent-foreground font-medium"
+                          "block px-3 py-2 text-sm rounded-lg transition-all duration-200",
+                          "text-muted-foreground hover:text-foreground hover:bg-muted",
+                          isActive(child.href) && "text-accent font-medium bg-accent/5"
                         )}
                       >
                         {child.label}
@@ -212,14 +219,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
         })}
       </nav>
 
-      {/* Collapse Toggle Button */}
-      <div className="p-3 border-t border-primary-foreground/10">
+      {/* Collapse Toggle */}
+      <div className="p-3 border-t border-border">
         <Button
           variant="ghost"
           size="sm"
           onClick={onToggle}
           className={cn(
-            "w-full text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10",
+            "w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl",
             collapsed ? "justify-center" : "justify-start gap-2"
           )}
         >
