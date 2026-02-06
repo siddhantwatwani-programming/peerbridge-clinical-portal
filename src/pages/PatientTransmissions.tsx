@@ -139,20 +139,35 @@ const PatientTransmissions: React.FC = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">Patient Transmissions</h1>
-        <Button variant="outline" className="gap-2">
-          <FileText className="h-4 w-4" />
-          View Historical Transmissions
-        </Button>
-        <Button 
-          variant={triageEnabled ? "accent" : "outline"} 
-          className="gap-2"
-          onClick={() => setTriageEnabled(!triageEnabled)}
-        >
-          <Sparkles className="h-4 w-4" />
-          {triageEnabled ? 'AI Triage On' : 'AI Triage Off'}
-        </Button>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold text-foreground">Patient Transmissions</h1>
+          <Button 
+            variant={triageEnabled ? "accent" : "outline"} 
+            className="gap-2"
+            onClick={() => setTriageEnabled(!triageEnabled)}
+          >
+            <Sparkles className="h-4 w-4" />
+            {triageEnabled ? 'AI Triage On' : 'AI Triage Off'}
+          </Button>
+        </div>
+        <div className="inline-flex items-center border-b border-border">
+          {[
+            { value: 'active', label: 'Active Transmissions' },
+            { value: 'historical', label: 'Historical Transmissions' },
+          ].map(tab => (
+            <button
+              key={tab.value}
+              className={`relative px-4 py-2.5 text-sm font-medium transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:rounded-full after:transition-all after:duration-200 ${
+                tab.value === 'active' 
+                  ? 'text-accent after:bg-accent' 
+                  : 'text-muted-foreground hover:text-foreground after:bg-transparent'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* AI Triage Loading */}

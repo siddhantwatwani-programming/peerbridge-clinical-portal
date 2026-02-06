@@ -226,25 +226,33 @@ const Studies: React.FC = () => {
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">
-          {viewMode === 'active' ? 'Active Studies' : 'Historical Studies'}
-        </h1>
-        <Button
-          variant="outline"
-          onClick={() => {
-            setViewMode(viewMode === 'active' ? 'historical' : 'active');
-            setCurrentPage(1);
-            setSearchQuery('');
-            setSelectedDoctors([]);
-            setSortColumn(null);
-            setSortDirection(null);
-          }}
-          className="gap-2"
-        >
-          <FileText className="h-4 w-4" />
-          {viewMode === 'active' ? 'View Historical Studies' : 'View Active Studies'}
-        </Button>
+      <div className="space-y-4">
+        <h1 className="text-2xl font-semibold text-foreground">Studies</h1>
+        <div className="inline-flex items-center border-b border-border">
+          {[
+            { value: 'active', label: 'Active Studies' },
+            { value: 'historical', label: 'Historical Studies' },
+          ].map(tab => (
+            <button
+              key={tab.value}
+              onClick={() => {
+                setViewMode(tab.value as 'active' | 'historical');
+                setCurrentPage(1);
+                setSearchQuery('');
+                setSelectedDoctors([]);
+                setSortColumn(null);
+                setSortDirection(null);
+              }}
+              className={`relative px-4 py-2.5 text-sm font-medium transition-all after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:rounded-full after:transition-all after:duration-200 ${
+                viewMode === tab.value 
+                  ? 'text-accent after:bg-accent' 
+                  : 'text-muted-foreground hover:text-foreground after:bg-transparent'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Filters */}
