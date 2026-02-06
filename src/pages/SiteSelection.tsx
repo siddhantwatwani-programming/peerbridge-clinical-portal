@@ -16,31 +16,16 @@ const SiteSelection: React.FC = () => {
   const { isAuthenticated, isLoading: authLoading, signOut, user } = useAuth();
   const [hasCheckedSession, setHasCheckedSession] = useState(false);
 
-  // Redirect to login if not authenticated - with session fallback check (skip in demo mode)
   useEffect(() => {
-    // Skip auth check in demo mode
-    if (isDemoMode) {
-      setHasCheckedSession(true);
-      return;
-    }
-
+    if (isDemoMode) { setHasCheckedSession(true); return; }
     const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/", { replace: true });
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) navigate("/", { replace: true });
       setHasCheckedSession(true);
     };
-
-    // Only check session after initial auth loading completes and hook says not authenticated
-    if (!authLoading && !isAuthenticated && !hasCheckedSession) {
-      checkSession();
-    }
+    if (!authLoading && !isAuthenticated && !hasCheckedSession) checkSession();
   }, [authLoading, isAuthenticated, hasCheckedSession, navigate, isDemoMode]);
 
-  // Auto-redirect to dashboard if user has only one site
   useEffect(() => {
     if (!sitesLoading && sites.length === 1) {
       switchSite(sites[0].id);
@@ -54,11 +39,8 @@ const SiteSelection: React.FC = () => {
   };
 
   const handleSignOut = async () => {
-    if (isDemoMode) {
-      exitDemoMode?.();
-    } else {
-      await signOut();
-    }
+    if (isDemoMode) exitDemoMode?.();
+    else await signOut();
     navigate("/", { replace: true });
   };
 
@@ -67,144 +49,102 @@ const SiteSelection: React.FC = () => {
     return membership?.role?.name || "Member";
   };
 
-  // Show loading only if not in demo mode and still loading
   if (!isDemoMode && (authLoading || sitesLoading)) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your sites...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-accent border-t-transparent mx-auto mb-4" />
+          <p className="text-sm text-muted-foreground">Loading your sites...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div
-      className={cn(
-        "min-h-screen flex flex-col",
-        isDemoMode
-          ? "bg-gradient-to-br from-slate-50 via-white to-slate-100"
-          : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900",
-      )}
-    >
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Subtle bg */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/[0.03] rounded-full blur-[100px] -translate-y-1/3 translate-x-1/4" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/[0.02] rounded-full blur-[80px] translate-y-1/4 -translate-x-1/4" />
+      </div>
+
       {/* Header */}
-      <header className="w-full p-6 flex items-center justify-between">
+      <header className="w-full p-6 flex items-center justify-between relative z-10">
+        <img src={peerbridgeLogo} alt="Peerbridge Health" className="h-10 w-auto" />
         <div className="flex items-center gap-3">
-          <img src={peerbridgeLogo} alt="Peerbridge Health" className="h-10 w-auto rounded-lg" />
-          {/* <span className={cn(
-            "text-xl font-semibold",
-            isDemoMode ? "text-foreground" : "text-white"
-          )}>Peerbridge Health</span> */}
-        </div>
-        <div className="flex items-center gap-4">
           {isDemoMode && (
-            <Badge variant="outline" className="text-amber-500 border-amber-500/50">
+            <Badge variant="outline" className="text-warning border-warning/30 rounded-lg text-xs">
               Demo Mode
             </Badge>
           )}
-          <span className="text-sm text-muted-foreground">{isDemoMode ? "Demo User" : user?.email}</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleSignOut}
-            className={cn("text-muted-foreground", isDemoMode ? "hover:text-foreground" : "hover:text-white")}
-          >
-            <LogOut className="h-4 w-4 mr-2" />
+          <span className="text-xs text-muted-foreground">{isDemoMode ? "Demo User" : user?.email}</span>
+          <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground hover:text-foreground rounded-xl text-xs">
+            <LogOut className="h-4 w-4 mr-1.5" />
             Sign Out
           </Button>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-3xl">
+      {/* Content */}
+      <main className="flex-1 flex items-center justify-center p-6 relative z-10">
+        <div className="w-full max-w-2xl">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-              <Building className="h-8 w-8 text-primary" />
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-accent/8 mb-4">
+              <Building className="h-7 w-7 text-accent" />
             </div>
-            <h1 className={cn("text-3xl font-bold mb-2", isDemoMode ? "text-foreground" : "text-white")}>
-              Select a Clinical Site
-            </h1>
-            <p className="text-muted-foreground">
-              Choose the site you want to access. You can switch sites anytime from the dashboard.
-            </p>
+            <h1 className="text-2xl font-display font-bold text-foreground mb-2">Select a Clinical Site</h1>
+            <p className="text-sm text-muted-foreground">Choose a site to access. Switch anytime from the dashboard.</p>
           </div>
 
           {sites.length === 0 ? (
-            <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+            <Card className="rounded-2xl border-border/60">
               <CardContent className="py-12 text-center">
-                <Building className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-                <h2 className="text-xl font-semibold text-foreground mb-2">No Sites Available</h2>
-                <p className="text-muted-foreground mb-6">
-                  You don't have access to any clinical sites yet. Please contact your administrator.
-                </p>
-                <Button variant="outline" onClick={handleSignOut}>
-                  Sign Out
-                </Button>
+                <Building className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" />
+                <h2 className="text-lg font-semibold text-foreground mb-2">No Sites Available</h2>
+                <p className="text-sm text-muted-foreground mb-6">Contact your administrator for access.</p>
+                <Button variant="outline" onClick={handleSignOut} className="rounded-xl">Sign Out</Button>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4">
-              {sites.map((site) => {
-                const roleName = getRoleName(site.id);
-
-                return (
-                  <Card
-                    key={site.id}
-                    className={cn(
-                      "bg-card/50 backdrop-blur-sm border-border/50 cursor-pointer transition-all duration-200",
-                      "hover:border-primary/50 hover:bg-card/80 hover:shadow-lg hover:shadow-primary/5",
-                      "group",
-                    )}
-                    onClick={() => handleSiteSelect(site.id)}
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-2">
-                            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 shrink-0">
-                              <Building className="h-5 w-5 text-primary" />
-                            </div>
-                            <div className="min-w-0">
-                              <h3 className="font-semibold text-lg text-foreground truncate">{site.name}</h3>
-                              {site.address && (
-                                <p className="text-sm text-muted-foreground flex items-center gap-1.5 truncate">
-                                  <MapPin className="h-3.5 w-3.5 shrink-0" />
-                                  <span className="truncate">{site.address}</span>
-                                </p>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 mt-3">
-                            <Badge variant="secondary" className="text-xs">
-                              <Users className="h-3 w-3 mr-1" />
-                              {roleName}
-                            </Badge>
-                            {site.phone && (
-                              <Badge variant="outline" className="text-xs text-muted-foreground">
-                                {site.phone}
-                              </Badge>
-                            )}
-                          </div>
+            <div className="grid gap-3">
+              {sites.map((site) => (
+                <Card
+                  key={site.id}
+                  className="rounded-2xl border-border/60 cursor-pointer transition-all duration-300 hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 group"
+                  onClick={() => handleSiteSelect(site.id)}
+                >
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="h-11 w-11 rounded-xl bg-accent/8 flex items-center justify-center shrink-0 group-hover:bg-accent/12 transition-colors">
+                          <Building className="h-5 w-5 text-accent" />
                         </div>
-
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                            <ChevronRight className="h-5 w-5 text-primary group-hover:translate-x-0.5 transition-transform" />
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-foreground truncate">{site.name}</h3>
+                          {site.address && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 truncate">
+                              <MapPin className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{site.address}</span>
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge variant="secondary" className="text-xs rounded-lg">
+                              <Users className="h-3 w-3 mr-1" />
+                              {getRoleName(site.id)}
+                            </Badge>
                           </div>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+                      <ChevronRight className="h-5 w-5 text-muted-foreground/30 group-hover:text-accent group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           )}
 
-          <p className="text-center text-xs text-muted-foreground mt-8">
-            Your session is secure and HIPAA compliant. All data is encrypted.
+          <p className="text-center text-[11px] text-muted-foreground/60 mt-8">
+            Secure HIPAA-compliant session. All data encrypted.
           </p>
         </div>
       </main>

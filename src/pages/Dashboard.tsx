@@ -34,9 +34,9 @@ const Dashboard: React.FC = () => {
 
   const getSearchPlaceholder = () => {
     switch (activeTab) {
-      case 'reports': return 'Search reports';
-      case 'events': return 'Search events';
-      case 'studies': return 'Search studies';
+      case 'reports': return 'Search reports...';
+      case 'events': return 'Search events...';
+      case 'studies': return 'Search studies...';
       default: return 'Search...';
     }
   };
@@ -47,26 +47,26 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Platform Health Monitor for Site Admins */}
+    <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
+      {/* Platform Health Monitor */}
       <PlatformHealthCard onTabChange={setActiveTab} />
 
-      {/* Top Filters Row */}
-      <div className="flex items-center gap-4">
+      {/* Toolbar */}
+      <div className="flex items-center gap-3 flex-wrap">
         <div className="flex-1 relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder="System All...."
-            className="input-medical w-full pl-10"
+            placeholder="Search across all..."
+            className="input-medical w-full pl-10 h-10 text-sm"
           />
         </div>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" className="gap-2 rounded-xl h-10 text-sm">
           <Filter className="h-4 w-4" />
-          Filter by Physician (0)
+          Filter by Physician
         </Button>
         <div className="flex-1" />
-        <Button variant="accent" className="gap-2" onClick={() => setIsRegisterStudyOpen(true)}>
+        <Button variant="accent" className="gap-2 rounded-xl h-10 text-sm shadow-lg shadow-accent/15" onClick={() => setIsRegisterStudyOpen(true)}>
           <Plus className="h-4 w-4" />
           Register New Study
         </Button>
@@ -74,83 +74,76 @@ const Dashboard: React.FC = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start gap-4 h-auto p-0">
-          <TabsTrigger 
-            value="reports" 
-            className="data-[state=active]:border-b-2 data-[state=active]:border-accent data-[state=active]:text-accent rounded-none bg-transparent px-0 pb-3 text-muted-foreground data-[state=active]:shadow-none"
-          >
-            Active Reports
-          </TabsTrigger>
-          <TabsTrigger 
-            value="events"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-accent data-[state=active]:text-accent rounded-none bg-transparent px-0 pb-3 text-muted-foreground data-[state=active]:shadow-none"
-          >
-            Active Events
-          </TabsTrigger>
-          <TabsTrigger 
-            value="studies"
-            className="data-[state=active]:border-b-2 data-[state=active]:border-accent data-[state=active]:text-accent rounded-none bg-transparent px-0 pb-3 text-muted-foreground data-[state=active]:shadow-none"
-          >
-            Active Studies
-          </TabsTrigger>
+        <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start gap-6 h-auto p-0">
+          {[
+            { value: 'reports', label: 'Active Reports' },
+            { value: 'events', label: 'Active Events' },
+            { value: 'studies', label: 'Active Studies' },
+          ].map(tab => (
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="data-[state=active]:border-b-2 data-[state=active]:border-accent data-[state=active]:text-foreground rounded-none bg-transparent px-0 pb-3 text-muted-foreground data-[state=active]:shadow-none font-medium text-sm"
+            >
+              {tab.label}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
-        {/* Tab Content */}
         <div className="mt-6">
-          {/* Section Header */}
+          {/* Section header */}
           <div className="flex items-center gap-4 mb-4">
-            <h2 className="text-xl font-semibold text-foreground">
+            <h2 className="text-lg font-display font-semibold text-foreground">
               {activeTab === 'reports' && 'Active Reports'}
               {activeTab === 'events' && 'Active Events'}
               {activeTab === 'studies' && 'Active Studies'}
             </h2>
-            <div className="flex-1 relative max-w-lg">
+            <div className="flex-1 relative max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
                 placeholder={getSearchPlaceholder()}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="input-medical w-full pl-10 py-2"
+                className="input-medical w-full pl-10 py-2 text-sm h-9"
               />
             </div>
           </div>
 
           <TabsContent value="reports" className="mt-0">
-            <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+            <div className="bg-card rounded-2xl border border-border/60 shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border bg-muted/30">
-                      <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                        <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                          PATIENT
+                      <th className="text-left p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        <button className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                          Patient
                           <ArrowUpDown className="h-3 w-3" />
                         </button>
                       </th>
-                      <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                        <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                          STUDY TYPE
+                      <th className="text-left p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        <button className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                          Study Type
                           <ArrowUpDown className="h-3 w-3" />
                         </button>
                       </th>
-                      <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                        <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                          STUDY BEGIN DATE
+                      <th className="text-left p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        <button className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                          Study Begin Date
                           <ArrowUpDown className="h-3 w-3" />
                         </button>
                       </th>
-                      <th className="text-right p-4 text-sm font-medium text-muted-foreground">
-                      </th>
+                      <th className="text-right p-4"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {reports.map((report) => (
-                      <tr key={report.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
-                        <td className="p-4 text-sm font-medium text-primary">
+                      <tr key={report.id} className="border-b border-border/40 last:border-0 hover:bg-muted/30 transition-colors">
+                        <td className="p-4 text-sm font-medium text-foreground">
                           {report.patient}
                         </td>
-                        <td className="p-4 text-sm text-foreground">
+                        <td className="p-4 text-sm text-muted-foreground">
                           {report.studyType}
                         </td>
                         <td className="p-4 text-sm text-muted-foreground">
@@ -161,11 +154,12 @@ const Dashboard: React.FC = () => {
                             <Button 
                               variant="accent" 
                               size="sm"
+                              className="rounded-lg text-xs shadow-sm"
                               onClick={() => handlePreviewReport(report)}
                             >
                               Preview Report
                             </Button>
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" className="rounded-lg text-xs">
                               Send to history
                             </Button>
                           </div>
@@ -188,7 +182,6 @@ const Dashboard: React.FC = () => {
         </div>
       </Tabs>
 
-      {/* PDF Preview Modal */}
       <PDFPreviewModal 
         isOpen={isPdfModalOpen}
         onClose={() => setIsPdfModalOpen(false)}
@@ -196,7 +189,6 @@ const Dashboard: React.FC = () => {
         studyType={selectedReport?.studyType || ''}
       />
 
-      {/* Register New Study Modal */}
       <RegisterStudyModal 
         isOpen={isRegisterStudyOpen}
         onClose={() => setIsRegisterStudyOpen(false)}

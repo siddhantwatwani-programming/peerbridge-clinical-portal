@@ -16,12 +16,12 @@ export const SidebarLayout: React.FC = () => {
       />
       <div 
         className={cn(
-          "transition-all duration-300 ease-in-out",
+          "transition-all duration-300 ease-in-out min-h-screen",
           sidebarCollapsed ? "ml-16" : "ml-60"
         )}
       >
         <TopHeader />
-        <main>
+        <main className="min-h-[calc(100vh-4rem)]">
           <Outlet />
         </main>
       </div>

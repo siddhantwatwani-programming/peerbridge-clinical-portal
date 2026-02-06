@@ -1,24 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock, Eye, EyeOff, Shield, Mail, Play } from 'lucide-react';
+import { Lock, Eye, EyeOff, Shield, Mail, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useSite } from '@/contexts/SiteContext';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import peerbridgeLogo from '@/assets/peerbridge-logo.jpg';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn, signUp, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { signIn, isAuthenticated, isLoading: authLoading } = useAuth();
   const { enableDemoMode } = useSite();
 
   const handleDemoMode = () => {
@@ -30,7 +27,6 @@ const Login: React.FC = () => {
     navigate('/select-site', { replace: true });
   };
 
-  // Redirect if already authenticated on initial page load
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
       navigate('/select-site', { replace: true });
@@ -50,13 +46,11 @@ const Login: React.FC = () => {
           title: "Authentication Failed",
           description: error,
         });
-        setIsLoading(false);
       } else {
         toast({
           title: "Welcome back!",
           description: "Successfully authenticated.",
         });
-        setIsLoading(false);
         navigate('/select-site', { replace: true });
       }
     } catch (err) {
@@ -66,205 +60,143 @@ const Login: React.FC = () => {
         title: "Authentication Failed",
         description: "An unexpected error occurred",
       });
-      setIsLoading(false);
-    }
-  };
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    const { error } = await signUp(email, password, fullName);
-
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Sign Up Failed",
-        description: error,
-      });
-      setIsLoading(false);
-    } else {
-      toast({
-        title: "Account created!",
-        description: "You can now sign in with your credentials.",
-      });
-      setActiveTab('signin');
+    } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      {/* Animated ECG background */}
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background">
+      {/* Subtle background pattern */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Left ECG line */}
-        <svg 
-          className="absolute top-1/2 -translate-y-1/2 left-0 w-1/3 h-40 opacity-[0.15]"
-          viewBox="0 0 400 100"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M0,50 L80,50 L100,50 L120,20 L140,80 L160,30 L180,70 L200,50 L280,50 L300,50 L320,15 L340,85 L360,40 L380,60 L400,50"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="text-accent animate-pulse"
-          />
-        </svg>
-        
-        {/* Right ECG line */}
-        <svg 
-          className="absolute top-1/2 -translate-y-1/2 right-0 w-1/3 h-40 opacity-[0.15]"
-          viewBox="0 0 400 100"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M0,50 L80,50 L100,50 L120,25 L140,75 L160,35 L180,65 L200,50 L280,50 L300,50 L320,20 L340,80 L360,45 L380,55 L400,50"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="text-accent animate-pulse"
-            style={{ animationDelay: '1s' }}
-          />
-        </svg>
-
-        {/* Subtle gradient orbs */}
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-accent/[0.04] rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/[0.03] rounded-full blur-[100px] translate-y-1/3 -translate-x-1/4" />
+        {/* Grid dots */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: 'radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)',
+          backgroundSize: '32px 32px'
+        }} />
       </div>
 
       {/* Login Card */}
       <div className="w-full max-w-md relative z-10">
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden transition-all duration-300 hover:shadow-2xl">
-          {/* Header with logo */}
+        <div className="bg-card rounded-2xl shadow-xl border border-border/60 overflow-hidden">
+          {/* Header */}
           <div className="pt-10 pb-6 px-8 text-center">
             <div className="flex justify-center mb-6">
               <img 
                 src={peerbridgeLogo} 
                 alt="Peerbridge Health" 
-                className="h-16 object-contain transition-transform duration-300 hover:scale-105"
+                className="h-14 object-contain"
               />
             </div>
-            
-            {/* Orange accent line with gradient */}
-            <div className="h-1 bg-gradient-to-r from-transparent via-accent to-transparent rounded-full" />
+            <div className="h-0.5 w-16 mx-auto bg-gradient-to-r from-transparent via-accent to-transparent rounded-full" />
           </div>
 
-          {/* Tabs */}
+          {/* Form */}
           <div className="px-8 pb-8">
-            {/* Sign In Form */}
             <form onSubmit={handleSignIn} className="space-y-5">
-                {/* Email field */}
-                <div className="space-y-2">
-                  <label htmlFor="signin-email" className="text-sm font-medium text-muted-foreground">
-                    Email Address
-                  </label>
-                  <div className={`relative transition-all duration-200 ${focusedField === 'email' ? 'transform scale-[1.02]' : ''}`}>
-                    <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 transition-colors duration-200 ${focusedField === 'email' ? 'text-accent' : 'text-muted-foreground'}`} />
-                    <input
-                      id="signin-email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      onFocus={() => setFocusedField('email')}
-                      onBlur={() => setFocusedField(null)}
-                      placeholder="demo@peerbridge.health"
-                      className="w-full h-12 pl-12 pr-4 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground 
-                        focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent
-                        transition-all duration-200 hover:border-muted-foreground/50"
-                      required
-                    />
-                  </div>
+              <div className="space-y-1.5">
+                <label htmlFor="signin-email" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Email
+                </label>
+                <div className={`relative transition-all duration-200 ${focusedField === 'email' ? 'transform scale-[1.01]' : ''}`}>
+                  <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors duration-200 ${focusedField === 'email' ? 'text-accent' : 'text-muted-foreground'}`} />
+                  <input
+                    id="signin-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onFocus={() => setFocusedField('email')}
+                    onBlur={() => setFocusedField(null)}
+                    placeholder="demo@peerbridge.health"
+                    className="w-full h-12 pl-12 pr-4 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground/60 
+                      focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent
+                      transition-all duration-200"
+                    required
+                  />
                 </div>
+              </div>
 
-                {/* Password field */}
-                <div className="space-y-2">
-                  <label htmlFor="signin-password" className="text-sm font-medium text-muted-foreground">
-                    Password
-                  </label>
-                  <div className={`relative transition-all duration-200 ${focusedField === 'password' ? 'transform scale-[1.02]' : ''}`}>
-                    <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 transition-colors duration-200 ${focusedField === 'password' ? 'text-accent' : 'text-muted-foreground'}`} />
-                    <input
-                      id="signin-password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      onFocus={() => setFocusedField('password')}
-                      onBlur={() => setFocusedField(null)}
-                      placeholder="Enter password"
-                      className="w-full h-12 pl-12 pr-12 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground 
-                        focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent
-                        transition-all duration-200 hover:border-muted-foreground/50"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-accent transition-colors duration-200 p-1 rounded-full hover:bg-muted"
-                    >
-                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Forgot password link */}
-                <div className="text-center">
+              <div className="space-y-1.5">
+                <label htmlFor="signin-password" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Password
+                </label>
+                <div className={`relative transition-all duration-200 ${focusedField === 'password' ? 'transform scale-[1.01]' : ''}`}>
+                  <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors duration-200 ${focusedField === 'password' ? 'text-accent' : 'text-muted-foreground'}`} />
+                  <input
+                    id="signin-password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onFocus={() => setFocusedField('password')}
+                    onBlur={() => setFocusedField(null)}
+                    placeholder="Enter password"
+                    className="w-full h-12 pl-12 pr-12 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground/60 
+                      focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent
+                      transition-all duration-200"
+                    required
+                  />
                   <button
                     type="button"
-                    className="text-sm text-muted-foreground hover:text-accent transition-colors duration-200 relative group"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-accent transition-colors duration-200 p-1 rounded-lg hover:bg-muted"
                   >
-                    Forgot Password
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full" />
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+              </div>
 
-                {/* Login button */}
-                <Button
-                  type="submit"
-                  className="w-full h-12 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-lg shadow-lg shadow-accent/25 
-                    transition-all duration-300 hover:shadow-xl hover:shadow-accent/30 hover:-translate-y-0.5 active:translate-y-0"
-                  disabled={isLoading}
+              <div className="text-right">
+                <button
+                  type="button"
+                  className="text-xs text-muted-foreground hover:text-accent transition-colors duration-200"
                 >
-                  {isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 border-2 border-accent-foreground/30 border-t-accent-foreground rounded-full animate-spin" />
-                      <span>Authenticating...</span>
-                    </div>
-                  ) : (
-                    'Sign In'
-                  )}
-                </Button>
-              </form>
+                  Forgot Password?
+                </button>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full h-12 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-xl shadow-lg shadow-accent/20 
+                  transition-all duration-300 hover:shadow-xl hover:shadow-accent/25 hover:-translate-y-0.5 active:translate-y-0"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-accent-foreground/30 border-t-accent-foreground rounded-full animate-spin" />
+                    <span>Authenticating...</span>
+                  </div>
+                ) : (
+                  'Sign In'
+                )}
+              </Button>
+            </form>
           </div>
 
-          {/* HIPAA Badge */}
-          <div className="px-8 pb-6">
-            <div className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-full border border-emerald-200 bg-emerald-50/50 text-emerald-700 text-sm font-medium transition-all duration-200 hover:bg-emerald-50 hover:border-emerald-300">
-              <Shield className="h-4 w-4" />
+          {/* Footer */}
+          <div className="px-8 pb-6 space-y-3">
+            <div className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-success/5 border border-success/10 text-success text-xs font-medium">
+              <Shield className="h-3.5 w-3.5" />
               <span>HIPAA Compliant Session</span>
             </div>
-          </div>
 
-          {/* Demo Mode Button */}
-          <div className="px-8 pb-8">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={handleDemoMode}
-              className="w-full h-10 border-dashed border-muted-foreground/30 text-muted-foreground hover:text-accent hover:border-accent transition-all duration-200"
+              className="w-full h-10 text-muted-foreground hover:text-accent rounded-xl text-xs"
             >
-              <Play className="h-4 w-4 mr-2" />
+              <Play className="h-3.5 w-3.5 mr-2" />
               Skip to Demo
             </Button>
           </div>
         </div>
 
-        {/* Footer text */}
-        <p className="text-center text-xs text-slate-400 mt-6">
-          Protected by enterprise-grade security. All sessions are encrypted.
+        <p className="text-center text-[11px] text-muted-foreground/60 mt-6">
+          Protected by enterprise-grade encryption. All sessions secured.
         </p>
       </div>
-
     </div>
   );
 };

@@ -22,20 +22,20 @@ const events: Event[] = [
 
 export const ActiveEventsTable: React.FC = () => {
   return (
-    <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+    <div className="bg-card rounded-2xl border border-border/60 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-border bg-muted/30">
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                  PATIENT
+            <tr className="border-b border-border/40 bg-muted/20">
+              <th className="text-left p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <button className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                  Patient
                   <ArrowUpDown className="h-3 w-3" />
                 </button>
               </th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                  RECEIVED
+              <th className="text-left p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <button className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                  Received
                   <ArrowUpDown className="h-3 w-3" />
                 </button>
               </th>
@@ -44,19 +44,19 @@ export const ActiveEventsTable: React.FC = () => {
           </thead>
           <tbody>
             {events.map((event) => (
-              <tr key={event.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
-                <td className="p-4 text-sm font-medium text-primary">
+              <tr key={event.id} className="border-b border-border/30 last:border-0 hover:bg-muted/20 transition-colors">
+                <td className="p-4 text-sm font-medium text-foreground">
                   {event.patient}
                 </td>
                 <td className="p-4 text-sm text-muted-foreground">
                   {event.received}
                 </td>
                 <td className="p-4">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-accent hover:text-accent hover:bg-accent/10">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground hover:text-accent hover:bg-accent/5">
                       <Download className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-accent hover:text-accent hover:bg-accent/10">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground hover:text-accent hover:bg-accent/5">
                       <Printer className="h-4 w-4" />
                     </Button>
                   </div>

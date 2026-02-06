@@ -585,19 +585,14 @@ I'm here to help you navigate the **${pageContext.pageName}** and provide insigh
           }}
           onMouseDown={handleMouseDown}
         >
-          {/* Collapse/Expand Toggle - also draggable */}
           <div
             className={cn(
-              "p-2 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground shadow-md transition-all duration-200 hover:scale-105",
+              "p-2 rounded-xl bg-card/80 backdrop-blur-md hover:bg-card text-muted-foreground shadow-lg border border-border/40 transition-all duration-200 hover:scale-105",
               isDragging ? "cursor-grabbing" : "cursor-grab"
             )}
             onClick={(e) => {
-              // Only toggle if it wasn't a drag
-              if (!isDragging) {
-                setIsButtonCollapsed(!isButtonCollapsed);
-              }
+              if (!isDragging) setIsButtonCollapsed(!isButtonCollapsed);
             }}
-            aria-label={isButtonCollapsed ? "Expand PeerBridge AI" : "Collapse PeerBridge AI"}
           >
             {isButtonCollapsed ? (
               <ChevronLeft className="h-4 w-4" />
@@ -606,27 +601,21 @@ I'm here to help you navigate the **${pageContext.pageName}** and provide insigh
             )}
           </div>
           
-          {/* Main AI Button */}
           <button
             onClick={handleOpen}
             onMouseEnter={() => setIsButtonHovered(true)}
             onMouseLeave={() => setIsButtonHovered(false)}
             className={cn(
-              "flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group",
-              isButtonCollapsed && !isButtonHovered ? "p-3" : "px-4 py-3"
+              "flex items-center gap-2 rounded-2xl bg-accent text-accent-foreground shadow-xl shadow-accent/20 hover:shadow-2xl hover:shadow-accent/30 transition-all duration-300 hover:scale-105 group",
+              isButtonCollapsed && !isButtonHovered ? "p-3.5" : "px-5 py-3.5"
             )}
-            aria-label="Open PeerBridge AI"
           >
             {isButtonCollapsed && !isButtonHovered ? (
-              <img 
-                src={peerbridgeAILogo} 
-                alt="PeerBridge" 
-                className="h-6 w-6 rounded-full object-contain"
-              />
+              <img src={peerbridgeAILogo} alt="PeerBridge" className="h-6 w-6 rounded-full object-contain" />
             ) : (
               <>
                 <HeartPulse className="h-5 w-5 animate-[pulse_1s_ease-in-out_infinite]" />
-                <span className="font-medium whitespace-nowrap">PeerBridge AI</span>
+                <span className="font-semibold whitespace-nowrap text-sm">PeerBridge AI</span>
               </>
             )}
           </button>
@@ -637,7 +626,7 @@ I'm here to help you navigate the **${pageContext.pageName}** and provide insigh
       {isOpen && (
         <div
           className={cn(
-            "fixed z-50 bg-card border border-border rounded-xl shadow-2xl flex flex-col",
+            "fixed z-50 bg-card border border-border/60 rounded-2xl shadow-2xl flex flex-col",
             isMinimized 
               ? "w-72 h-14" 
               : "w-[420px] h-[600px] max-h-[80vh]",
@@ -649,46 +638,32 @@ I'm here to help you navigate the **${pageContext.pageName}** and provide insigh
             animation: !isDragging ? 'scale-in 0.2s ease-out' : undefined
           }}
         >
-          {/* Header - Draggable */}
+          {/* Header */}
           <div 
             className={cn(
-              "flex items-center justify-between p-4 border-b border-border bg-primary/5 rounded-t-xl",
+              "flex items-center justify-between p-4 border-b border-border/40 rounded-t-2xl",
               isDragging ? "cursor-grabbing" : "cursor-grab"
             )}
             onMouseDown={handleMouseDown}
           >
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-accent">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-accent">
                 <HeartPulse className="h-4 w-4 text-accent-foreground animate-[pulse_1s_ease-in-out_infinite]" />
               </div>
               <div>
                 <h3 className="font-semibold text-foreground text-sm">PeerBridge AI</h3>
                 {!isMinimized && (
                   <p className="text-xs text-muted-foreground">
-                    Viewing: {pageContext.pageName}
+                    {pageContext.pageName}
                   </p>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setIsMinimized(!isMinimized)}
-              >
-                {isMinimized ? (
-                  <Maximize2 className="h-4 w-4" />
-                ) : (
-                  <Minimize2 className="h-4 w-4" />
-                )}
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => setIsMinimized(!isMinimized)}>
+                {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={handleClose}
-              >
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={handleClose}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -708,16 +683,16 @@ I'm here to help you navigate the **${pageContext.pageName}** and provide insigh
                       )}
                     >
                       {message.role === 'assistant' && (
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Bot className="h-4 w-4 text-primary" />
+                        <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center">
+                          <Bot className="h-4 w-4 text-accent" />
                         </div>
                       )}
                       <div
                         className={cn(
-                          "max-w-[85%] rounded-xl px-4 py-3 text-sm",
+                          "max-w-[85%] rounded-2xl px-4 py-3 text-sm",
                           message.role === 'user'
                             ? "bg-accent text-accent-foreground rounded-br-md"
-                            : "bg-secondary text-secondary-foreground rounded-bl-md"
+                            : "bg-muted text-foreground rounded-bl-md"
                         )}
                       >
                         <div className="prose prose-sm dark:prose-invert max-w-none">
@@ -725,7 +700,7 @@ I'm here to help you navigate the **${pageContext.pageName}** and provide insigh
                         </div>
                       </div>
                       {message.role === 'user' && (
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center">
                           <User className="h-4 w-4 text-accent" />
                         </div>
                       )}
@@ -734,14 +709,14 @@ I'm here to help you navigate the **${pageContext.pageName}** and provide insigh
 
                   {isTyping && messages[messages.length - 1]?.role !== 'assistant' && (
                     <div className="flex gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Bot className="h-4 w-4 text-primary" />
+                      <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center">
+                        <Bot className="h-4 w-4 text-accent" />
                       </div>
-                      <div className="bg-secondary rounded-xl rounded-bl-md px-4 py-3">
-                        <div className="flex gap-1">
-                          <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                          <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                          <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
+                        <div className="flex gap-1.5">
+                          <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                          <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                          <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                         </div>
                       </div>
                     </div>
@@ -770,15 +745,14 @@ I'm here to help you navigate the **${pageContext.pageName}** and provide insigh
               )}
 
               {/* Input */}
-              <div className="p-4 border-t border-border">
+              <div className="p-4 border-t border-border/40">
                 <div className="flex gap-2">
-                  {/* Voice Button */}
                   <Button
                     onClick={handleVoiceModeToggle}
                     variant={isVoiceMode ? "default" : "outline"}
                     size="icon"
                     className={cn(
-                      "h-11 w-11 shrink-0 transition-all",
+                      "h-10 w-10 shrink-0 rounded-xl transition-all",
                       isVoiceMode && "bg-accent hover:bg-accent/90",
                       isListening && "ring-2 ring-accent ring-offset-2"
                     )}
@@ -796,8 +770,8 @@ I'm here to help you navigate the **${pageContext.pageName}** and provide insigh
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder={isVoiceMode ? "Voice mode active - speak your command..." : "Ask about Peerbridge Health, ECG monitoring, or this screen..."}
-                    className="min-h-[44px] max-h-[120px] resize-none text-sm"
+                    placeholder={isVoiceMode ? "Voice mode active..." : "Ask anything..."}
+                    className="min-h-[40px] max-h-[100px] resize-none text-sm rounded-xl"
                     rows={1}
                     disabled={isVoiceMode && isListening}
                   />
@@ -805,15 +779,15 @@ I'm here to help you navigate the **${pageContext.pageName}** and provide insigh
                     onClick={handleSend}
                     disabled={!inputValue.trim() || isTyping || (isVoiceMode && isListening)}
                     size="icon"
-                    className="h-11 w-11 bg-accent hover:bg-accent/90"
+                    className="h-10 w-10 bg-accent hover:bg-accent/90 rounded-xl"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2 text-center">
+                <p className="text-[11px] text-muted-foreground/60 mt-2 text-center">
                   {isVoiceMode 
                     ? '🎤 Say "create patient" to start voice registration' 
-                    : 'Clinical decision support only. Subject to physician review.'}
+                    : 'Clinical decision support · Subject to review'}
                 </p>
               </div>
             </>
