@@ -14,15 +14,7 @@ interface ResearchReport {
 }
 
 const researchReports: ResearchReport[] = [
-  { 
-    id: '1', 
-    patientName: 'Ravii Choudhary', 
-    studyType: '24 Hours Holter', 
-    reportStatus: 'Report Ready', 
-    doctor: 'Prashant Kumar', 
-    startDate: '10/30/2025', 
-    endDate: '11/01/2025' 
-  },
+  { id: '1', patientName: 'Ravii Choudhary', studyType: '24 Hours Holter', reportStatus: 'Report Ready', doctor: 'Prashant Kumar', startDate: '10/30/2025', endDate: '11/01/2025' },
 ];
 
 const Research: React.FC = () => {
@@ -41,90 +33,56 @@ const Research: React.FC = () => {
   const totalResults = filteredReports.length;
   const totalPages = Math.ceil(totalResults / itemsPerPage) || 1;
 
-  const handlePreviewReport = (report: ResearchReport) => {
-    setSelectedReport(report);
-    setIsPdfModalOpen(true);
-  };
+  const handlePreviewReport = (report: ResearchReport) => { setSelectedReport(report); setIsPdfModalOpen(true); };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 lg:p-8 space-y-6 animate-fade-in">
       {/* Header */}
-      <h1 className="text-2xl font-semibold text-foreground">Research</h1>
+      <div>
+        <h1 className="text-2xl font-display font-semibold text-foreground">Research</h1>
+        <p className="text-sm text-muted-foreground mt-1">{totalResults} research reports</p>
+      </div>
 
       {/* Search */}
-      <div className="relative">
+      <div className="relative max-w-md">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Search"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="input-medical w-full pl-11 py-3"
-        />
+        <input type="text" placeholder="Search research reports..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="input-medical w-full pl-11" />
       </div>
 
       {/* Table */}
-      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-border/60 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border">
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    PATIENT
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    STUDY TYPE
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  REPORT STATUS
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    DOCTOR
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    START DATE
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    END DATE
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
+              <tr className="border-b border-border bg-muted/30">
+                {['Patient', 'Study Type', 'Report Status', 'Doctor', 'Start Date', 'End Date'].map(h => (
+                  <th key={h} className="text-left p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <button className="flex items-center gap-1.5 hover:text-foreground transition-colors">{h}<ArrowUpDown className="h-3 w-3" /></button>
+                  </th>
+                ))}
                 <th className="p-4"></th>
               </tr>
             </thead>
             <tbody>
-              {filteredReports.map((report) => (
-                <tr key={report.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
-                  <td className="p-4 text-sm text-primary font-medium">{report.patientName}</td>
-                  <td className="p-4 text-sm text-foreground">{report.studyType}</td>
-                  <td className="p-4 text-sm text-foreground">{report.reportStatus}</td>
-                  <td className="p-4 text-sm text-foreground">{report.doctor}</td>
-                  <td className="p-4 text-sm text-foreground">{report.startDate}</td>
-                  <td className="p-4 text-sm text-foreground">{report.endDate}</td>
-                  <td className="p-4">
-                    <Button 
-                      variant="accent" 
-                      size="sm"
-                      onClick={() => handlePreviewReport(report)}
-                    >
-                      Preview Report
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+              {filteredReports.length === 0 ? (
+                <tr><td colSpan={7} className="text-center py-12 text-muted-foreground">No research reports found</td></tr>
+              ) : (
+                filteredReports.map((report) => (
+                  <tr key={report.id} className="border-b border-border/40 last:border-0 hover:bg-accent/[0.03] transition-colors">
+                    <td className="p-4 text-sm text-accent font-medium">{report.patientName}</td>
+                    <td className="p-4 text-sm text-foreground">{report.studyType}</td>
+                    <td className="p-4 text-sm">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-success/10 text-success">{report.reportStatus}</span>
+                    </td>
+                    <td className="p-4 text-sm text-foreground">{report.doctor}</td>
+                    <td className="p-4 text-sm text-muted-foreground">{report.startDate}</td>
+                    <td className="p-4 text-sm text-muted-foreground">{report.endDate}</td>
+                    <td className="p-4">
+                      <Button variant="accent" size="sm" className="rounded-lg text-xs shadow-sm" onClick={() => handlePreviewReport(report)}>Preview Report</Button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -134,49 +92,16 @@ const Research: React.FC = () => {
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>Showing 1 to {Math.min(itemsPerPage, totalResults)} of {totalResults} results</span>
         <div className="flex items-center gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}><ChevronLeft className="h-4 w-4" /></Button>
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((page) => (
-            <Button
-              key={page}
-              variant={currentPage === page ? "default" : "ghost"}
-              size="icon"
-              className={`h-8 w-8 ${currentPage === page ? 'bg-muted text-foreground' : ''}`}
-              onClick={() => setCurrentPage(page)}
-            >
-              {page}
-            </Button>
+            <Button key={page} variant={currentPage === page ? "default" : "ghost"} size="icon" className={`h-8 w-8 rounded-lg ${currentPage === page ? 'bg-accent text-accent-foreground hover:bg-accent/90' : ''}`} onClick={() => setCurrentPage(page)}>{page}</Button>
           ))}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}><ChevronRight className="h-4 w-4" /></Button>
         </div>
       </div>
 
-      {/* PDF Preview Modal */}
       {selectedReport && (
-        <PDFPreviewModal
-          isOpen={isPdfModalOpen}
-          onClose={() => {
-            setIsPdfModalOpen(false);
-            setSelectedReport(null);
-          }}
-          patientName={selectedReport.patientName}
-          studyType={selectedReport.studyType}
-        />
+        <PDFPreviewModal isOpen={isPdfModalOpen} onClose={() => { setIsPdfModalOpen(false); setSelectedReport(null); }} patientName={selectedReport.patientName} studyType={selectedReport.studyType} />
       )}
     </div>
   );
