@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { Search, ArrowUpDown, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuCheckboxItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 
 interface Device {
   id: string;
@@ -30,6 +28,12 @@ const devices: Device[] = [
   { id: '8', useByDate: 'Feb 26, 2025', serviceTag: 'JMSSVDNC6H1', firstName: 'Mike', lastName: 'Kam', sku: 'FP-20248', status: 'Assigned', productName: 'Peerbridge Cor Event ™' },
 ];
 
+const statusStyles: Record<string, string> = {
+  'Assigned': 'bg-accent/10 text-accent',
+  'Retired': 'bg-muted text-muted-foreground',
+  'Unavailable': 'bg-destructive/10 text-destructive',
+};
+
 const InventoryDevices: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,136 +41,73 @@ const InventoryDevices: React.FC = () => {
   const itemsPerPage = 10;
 
   const filteredDevices = devices.filter(device => {
-    const matchesSearch = 
-      device.serviceTag.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      device.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      device.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      device.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      device.productName.toLowerCase().includes(searchQuery.toLowerCase());
-    
+    const matchesSearch = device.serviceTag.toLowerCase().includes(searchQuery.toLowerCase()) || device.firstName.toLowerCase().includes(searchQuery.toLowerCase()) || device.lastName.toLowerCase().includes(searchQuery.toLowerCase()) || device.sku.toLowerCase().includes(searchQuery.toLowerCase()) || device.productName.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilters.length === 0 || statusFilters.includes(device.status);
-    
     return matchesSearch && matchesStatus;
   });
 
   const totalResults = filteredDevices.length;
   const totalPages = Math.ceil(totalResults / itemsPerPage);
 
-  const toggleStatusFilter = (status: string) => {
-    setStatusFilters(prev => 
-      prev.includes(status) 
-        ? prev.filter(s => s !== status)
-        : [...prev, status]
-    );
-  };
+  const toggleStatusFilter = (status: string) => { setStatusFilters(prev => prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]); };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 lg:p-8 space-y-6 animate-fade-in">
       {/* Header */}
-      <h1 className="text-2xl font-semibold text-foreground">Inventory Devices</h1>
+      <div>
+        <h1 className="text-2xl font-display font-semibold text-foreground">Inventory Devices</h1>
+        <p className="text-sm text-muted-foreground mt-1">{totalResults} devices</p>
+      </div>
 
       {/* Search and Filter */}
       <div className="flex items-center gap-4">
-        <div className="relative flex-1">
+        <div className="relative flex-1 max-w-md">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="input-medical w-full pl-11 py-3"
-          />
+          <input type="text" placeholder="Search devices..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="input-medical w-full pl-11" />
         </div>
-        
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2 rounded-xl border-border">
               <Filter className="h-4 w-4" />
               Filter Status ({statusFilters.length})
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-card border border-border z-50">
-            <DropdownMenuCheckboxItem
-              checked={statusFilters.includes('Assigned')}
-              onCheckedChange={() => toggleStatusFilter('Assigned')}
-            >
-              Assigned
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={statusFilters.includes('Retired')}
-              onCheckedChange={() => toggleStatusFilter('Retired')}
-            >
-              Retired
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={statusFilters.includes('Unavailable')}
-              onCheckedChange={() => toggleStatusFilter('Unavailable')}
-            >
-              Unavailable
-            </DropdownMenuCheckboxItem>
+          <DropdownMenuContent align="end" className="w-48">
+            {['Assigned', 'Retired', 'Unavailable'].map(status => (
+              <DropdownMenuCheckboxItem key={status} checked={statusFilters.includes(status)} onCheckedChange={() => toggleStatusFilter(status)}>
+                {status}
+              </DropdownMenuCheckboxItem>
+            ))}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
       {/* Table */}
-      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-border/60 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border">
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    USE BY DATE
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    SERVICE TAG
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    FIRST NAME
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    LAST NAME
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    SKU
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    STATUS
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    PRODUCT NAME
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
+              <tr className="border-b border-border bg-muted/30">
+                {['Use By Date', 'Service Tag', 'First Name', 'Last Name', 'SKU', 'Status', 'Product Name'].map(h => (
+                  <th key={h} className="text-left p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <button className="flex items-center gap-1.5 hover:text-foreground transition-colors">{h}<ArrowUpDown className="h-3 w-3" /></button>
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {filteredDevices.map((device) => (
-                <tr key={device.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
-                  <td className="p-4 text-sm text-foreground">{device.useByDate}</td>
-                  <td className="p-4 text-sm text-primary font-medium">{device.serviceTag}</td>
+                <tr key={device.id} className="border-b border-border/40 last:border-0 hover:bg-accent/[0.03] transition-colors">
+                  <td className="p-4 text-sm text-muted-foreground">{device.useByDate}</td>
+                  <td className="p-4 text-sm text-accent font-medium">{device.serviceTag}</td>
                   <td className="p-4 text-sm text-foreground">{device.firstName}</td>
                   <td className="p-4 text-sm text-foreground">{device.lastName}</td>
-                  <td className="p-4 text-sm text-foreground">{device.sku}</td>
-                  <td className="p-4 text-sm text-foreground">{device.status}</td>
+                  <td className="p-4 text-sm text-muted-foreground">{device.sku}</td>
+                  <td className="p-4 text-sm">
+                    <span className={cn("inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium", statusStyles[device.status] || 'bg-muted text-muted-foreground')}>
+                      {device.status}
+                    </span>
+                  </td>
                   <td className="p-4 text-sm text-foreground">{device.productName}</td>
                 </tr>
               ))}
@@ -179,35 +120,11 @@ const InventoryDevices: React.FC = () => {
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>Showing 1 to {Math.min(itemsPerPage, totalResults)} of {totalResults} results</span>
         <div className="flex items-center gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}><ChevronLeft className="h-4 w-4" /></Button>
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((page) => (
-            <Button
-              key={page}
-              variant={currentPage === page ? "default" : "ghost"}
-              size="icon"
-              className={`h-8 w-8 ${currentPage === page ? 'bg-muted text-foreground' : ''}`}
-              onClick={() => setCurrentPage(page)}
-            >
-              {page}
-            </Button>
+            <Button key={page} variant={currentPage === page ? "default" : "ghost"} size="icon" className={`h-8 w-8 rounded-lg ${currentPage === page ? 'bg-accent text-accent-foreground hover:bg-accent/90' : ''}`} onClick={() => setCurrentPage(page)}>{page}</Button>
           ))}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}><ChevronRight className="h-4 w-4" /></Button>
         </div>
       </div>
     </div>

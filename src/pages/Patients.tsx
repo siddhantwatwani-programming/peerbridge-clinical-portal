@@ -40,76 +40,57 @@ const Patients: React.FC = () => {
   );
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 lg:p-8 space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">Patients</h1>
-        <Button variant="accent" className="gap-2" onClick={() => navigate('/patients/add')}>
+        <div>
+          <h1 className="text-2xl font-display font-semibold text-foreground">Patients</h1>
+          <p className="text-sm text-muted-foreground mt-1">{totalResults} patients registered</p>
+        </div>
+        <Button variant="accent" className="gap-2 rounded-xl shadow-lg shadow-accent/15" onClick={() => navigate('/patients/add')}>
           <Plus className="h-4 w-4" />
           Add a New Patient
         </Button>
       </div>
 
       {/* Search */}
-      <div className="relative">
+      <div className="relative max-w-md">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <input
           type="text"
-          placeholder="Search"
+          placeholder="Search by name or MRN..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="input-medical w-full pl-11 py-3"
+          className="input-medical w-full pl-11"
         />
       </div>
 
       {/* Table */}
-      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-border/60 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border">
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    MRN
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    LAST NAME
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    FIRST NAME
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    DATE OF BIRTH
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    PHONE NUMBER
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-center p-4 text-sm font-medium text-muted-foreground">
-                  CREATE NEW ORDER
+              <tr className="border-b border-border bg-muted/30">
+                {['MRN', 'Last Name', 'First Name', 'Date of Birth', 'Phone Number'].map(header => (
+                  <th key={header} className="text-left p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <button className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                      {header}
+                      <ArrowUpDown className="h-3 w-3" />
+                    </button>
+                  </th>
+                ))}
+                <th className="text-center p-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  New Order
                 </th>
               </tr>
             </thead>
             <tbody>
               {filteredPatients.map((patient) => (
-                <tr key={patient.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
-                  <td className="p-4 text-sm text-primary font-medium">
+                <tr key={patient.id} className="border-b border-border/40 last:border-0 hover:bg-accent/[0.03] transition-colors">
+                  <td className="p-4 text-sm text-accent font-medium">
                     {patient.mrn}
                   </td>
-                  <td className="p-4 text-sm text-foreground">
+                  <td className="p-4 text-sm text-foreground font-medium">
                     {patient.lastName}
                   </td>
                   <td className="p-4 text-sm text-foreground">
@@ -125,10 +106,10 @@ const Patients: React.FC = () => {
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 text-accent hover:text-accent hover:bg-accent/10"
+                      className="h-8 w-8 text-accent hover:text-accent hover:bg-accent/10 rounded-lg"
                       onClick={() => navigate(`/patients/create-order?patient=${encodeURIComponent(patient.firstName + ' ' + patient.lastName)}&mrn=${patient.mrn}`)}
                     >
-                      <Plus className="h-5 w-5" />
+                      <Plus className="h-4 w-4" />
                     </Button>
                   </td>
                 </tr>
@@ -142,13 +123,7 @@ const Patients: React.FC = () => {
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>Showing 1 to {itemsPerPage} of {totalResults} results</span>
         <div className="flex items-center gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-          >
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
           {[1, 2, 3, 4].map((page) => (
@@ -156,19 +131,13 @@ const Patients: React.FC = () => {
               key={page}
               variant={currentPage === page ? "default" : "ghost"}
               size="icon"
-              className={`h-8 w-8 ${currentPage === page ? 'bg-muted text-foreground' : ''}`}
+              className={`h-8 w-8 rounded-lg ${currentPage === page ? 'bg-accent text-accent-foreground hover:bg-accent/90' : ''}`}
               onClick={() => setCurrentPage(page)}
             >
               {page}
             </Button>
           ))}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-          >
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

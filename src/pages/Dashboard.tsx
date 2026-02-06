@@ -47,7 +47,7 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
+    <div className="p-6 lg:p-8 space-y-8 max-w-[1600px] mx-auto animate-fade-in">
       {/* Platform Health Monitor */}
       <PlatformHealthCard onTabChange={setActiveTab} />
 
@@ -61,7 +61,7 @@ const Dashboard: React.FC = () => {
             className="input-medical w-full pl-10 h-10 text-sm"
           />
         </div>
-        <Button variant="outline" className="gap-2 rounded-xl h-10 text-sm">
+        <Button variant="outline" className="gap-2 rounded-xl h-10 text-sm border-border">
           <Filter className="h-4 w-4" />
           Filter by Physician
         </Button>
@@ -135,7 +135,7 @@ const Dashboard: React.FC = () => {
                   </thead>
                   <tbody>
                     {reports.map((report) => (
-                      <tr key={report.id} className="border-b border-border/40 last:border-0 hover:bg-muted/30 transition-colors">
+                      <tr key={report.id} className="border-b border-border/40 last:border-0 hover:bg-accent/[0.03] transition-colors">
                         <td className="p-4 text-sm font-medium text-foreground">
                           {report.patient}
                         </td>
@@ -155,7 +155,7 @@ const Dashboard: React.FC = () => {
                             >
                               Preview Report
                             </Button>
-                            <Button variant="outline" size="sm" className="rounded-lg text-xs">
+                            <Button variant="outline" size="sm" className="rounded-lg text-xs border-border">
                               Send to history
                             </Button>
                           </div>
