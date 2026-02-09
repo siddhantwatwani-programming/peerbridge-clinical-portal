@@ -46,7 +46,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
-      <PlatformHealthCard onTabChange={setActiveTab} />
 
       {/* Toolbar */}
       <div className="flex items-center gap-3 flex-wrap">
@@ -157,6 +156,8 @@ const Dashboard: React.FC = () => {
           </TabsContent>
         </div>
       </Tabs>
+
+      <PlatformHealthCard onTabChange={setActiveTab} />
 
       <PDFPreviewModal 
         isOpen={isPdfModalOpen}
