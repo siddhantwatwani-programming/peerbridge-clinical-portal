@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SmartDeviceRecommendation } from '@/components/orders/SmartDeviceRecommendation';
+import { ICD10AutoSuggest } from '@/components/orders/ICD10AutoSuggest';
 import { VoiceFormInput } from '@/components/voice/VoiceFormInput';
 import { FieldSchema } from '@/hooks/useVoiceFormParser';
 
@@ -359,8 +360,14 @@ const CreateOrder: React.FC = () => {
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Start typing to search by code or description. Selected codes will appear above.
+                  Start typing to search by code or description, or use AI below.
                 </p>
+
+                {/* AI ICD-10 Auto-Suggest */}
+                <ICD10AutoSuggest
+                  onSelectCode={addDiagnosisCode}
+                  selectedCodes={selectedDiagnosisCodes}
+                />
               </div>
             </div>
           </div>
