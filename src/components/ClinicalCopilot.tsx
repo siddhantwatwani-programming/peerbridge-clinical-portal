@@ -210,8 +210,18 @@ async function streamChat({
   }
 }
 
-export const ClinicalCopilot: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface ClinicalCopilotProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controlledOpen, onOpenChange }) => {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setIsOpen = (val: boolean) => {
+    if (onOpenChange) onOpenChange(val);
+    else setInternalOpen(val);
+  };
   const [isMinimized, setIsMinimized] = useState(false);
   const [isButtonCollapsed, setIsButtonCollapsed] = useState(false);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
@@ -572,8 +582,8 @@ I'm here to help you navigate the **${pageContext.pageName}** and provide insigh
 
   return (
     <>
-      {/* Floating Button */}
-      {!isOpen && (
+      {/* Floating Button — hidden when controlled externally */}
+      {!isOpen && controlledOpen === undefined && (
         <div 
           className={cn(
             "fixed z-50 flex items-center gap-2",

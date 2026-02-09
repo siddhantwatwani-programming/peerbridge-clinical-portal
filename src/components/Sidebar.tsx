@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -12,11 +12,13 @@ import {
   ChevronDown,
   ChevronRight,
   PanelLeftClose,
-  PanelLeft
+  PanelLeft,
+  HeartPulse
 } from 'lucide-react';
 import { PeerbridgeLogo } from '@/components/PeerbridgeLogo';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { ClinicalCopilot } from '@/components/ClinicalCopilot';
 import {
   Tooltip,
   TooltipContent,
@@ -58,6 +60,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const location = useLocation();
   const [expandedItems, setExpandedItems] = React.useState<string[]>(['Inventory']);
+  const [copilotOpen, setCopilotOpen] = useState(false);
 
   const isActive = (href: string) => {
     if (href === '/dashboard') return location.pathname === '/dashboard';
@@ -219,6 +222,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
         })}
       </nav>
 
+      {/* PeerBridge AI */}
+      <div className="px-3 pb-2">
+        {collapsed ? (
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setCopilotOpen(true)}
+                className="flex items-center justify-center w-full p-3 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 transition-all duration-200 shadow-md shadow-accent/20"
+              >
+                <HeartPulse className="h-5 w-5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="bg-popover text-popover-foreground">
+              <p>PeerBridge AI</p>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <button
+            onClick={() => setCopilotOpen(true)}
+            className="flex items-center gap-2.5 w-full px-4 py-3 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 transition-all duration-200 shadow-md shadow-accent/20 font-semibold text-sm"
+          >
+            <HeartPulse className="h-5 w-5" />
+            <span>PeerBridge AI</span>
+          </button>
+        )}
+      </div>
+
       {/* Collapse Toggle */}
       <div className="p-3 border-t border-border">
         <Button
@@ -240,6 +270,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
           )}
         </Button>
       </div>
+
+      {/* Clinical Copilot */}
+      <ClinicalCopilot open={copilotOpen} onOpenChange={setCopilotOpen} />
     </aside>
   );
 };
