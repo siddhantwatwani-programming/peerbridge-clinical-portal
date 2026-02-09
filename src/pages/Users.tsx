@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { DataPageHeader } from '@/components/shared/DataPageHeader';
+import { SearchToolbar } from '@/components/shared/SearchToolbar';
+import { ModernTable } from '@/components/shared/ModernTable';
+import { ModernPagination } from '@/components/shared/ModernPagination';
 
 interface User {
   id: string;
@@ -37,118 +41,46 @@ const Users: React.FC = () => {
     user.lastName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const columns = [
+    { key: 'firstName', label: 'First Name', sortable: true, render: (u: User) => (
+      <span className="font-medium text-foreground">{u.firstName}</span>
+    )},
+    { key: 'lastName', label: 'Last Name', sortable: true, render: (u: User) => (
+      <span className="font-medium text-foreground">{u.lastName}</span>
+    )},
+    { key: 'createdDate', label: 'Created', sortable: true, render: (u: User) => (
+      <span className="text-muted-foreground text-xs tabular-nums">{u.createdDate}</span>
+    )},
+    { key: 'updateDate', label: 'Last Updated', sortable: true, render: (u: User) => (
+      <span className="text-muted-foreground text-xs tabular-nums">{u.updateDate}</span>
+    )},
+  ];
+
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">Site Settings</h1>
-        <Button variant="accent" className="gap-2" onClick={() => navigate('/users/add')}>
+    <div className="p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
+      <DataPageHeader title="Site Settings" subtitle={`${totalResults} users registered`}>
+        <Button variant="accent" className="gap-2 rounded-xl shadow-lg shadow-accent/10" onClick={() => navigate('/users/add')}>
           <Plus className="h-4 w-4" />
-          Add a New User
+          Add User
         </Button>
-      </div>
+      </DataPageHeader>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Search"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="input-medical w-full pl-11 py-3"
-        />
-      </div>
+      <SearchToolbar value={searchQuery} onChange={setSearchQuery} placeholder="Search users..." />
 
-      {/* Table */}
-      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    FIRST NAME
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    LAST NAME
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    CREATED DATE
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    UPDATE DATE
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
-                  <td className="p-4 text-sm text-foreground">
-                    {user.firstName}
-                  </td>
-                  <td className="p-4 text-sm text-foreground">
-                    {user.lastName}
-                  </td>
-                  <td className="p-4 text-sm text-muted-foreground">
-                    {user.createdDate}
-                  </td>
-                  <td className="p-4 text-sm text-muted-foreground">
-                    {user.updateDate}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ModernTable
+        columns={columns}
+        data={filteredUsers}
+        keyExtractor={(u) => u.id}
+        emptyMessage="No users found"
+      />
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>Showing 1 to {itemsPerPage} of {totalResults} results</span>
-        <div className="flex items-center gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          {[1, 2, 3, 4].map((page) => (
-            <Button
-              key={page}
-              variant={currentPage === page ? "default" : "ghost"}
-              size="icon"
-              className={`h-8 w-8 ${currentPage === page ? 'bg-muted text-foreground' : ''}`}
-              onClick={() => setCurrentPage(page)}
-            >
-              {page}
-            </Button>
-          ))}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      <ModernPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalResults={totalResults}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

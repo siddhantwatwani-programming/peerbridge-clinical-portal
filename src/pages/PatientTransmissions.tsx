@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ArrowUpDown, ChevronLeft, ChevronRight, FileText, Filter, Sparkles, Loader2 } from 'lucide-react';
+import { FileText, Filter, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PDFPreviewModal } from '@/components/dashboard/PDFPreviewModal';
 import { TransmissionTriageAlert } from '@/components/transmissions/TransmissionTriageAlert';
+import { DataPageHeader } from '@/components/shared/DataPageHeader';
+import { SearchToolbar } from '@/components/shared/SearchToolbar';
+import { ModernTable } from '@/components/shared/ModernTable';
+import { ModernPagination } from '@/components/shared/ModernPagination';
+import { StatusBadge } from '@/components/shared/StatusBadge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +15,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 interface Transmission {
   id: string;
@@ -22,30 +26,9 @@ interface Transmission {
 }
 
 const transmissions: Transmission[] = [
-  { 
-    id: '1', 
-    patient: 'Joel Larson', 
-    status: 'ReportAssigned',
-    createdDate: '08/12/2025 -08:12:32 PM',
-    symptomDescription: 'Fainted',
-    physician: 'Michael Kaminski'
-  },
-  { 
-    id: '2', 
-    patient: 'Mike Kam', 
-    status: 'ReportAssigned',
-    createdDate: '07/29/2025 -04:58:47 AM',
-    symptomDescription: 'No symptoms reported',
-    physician: 'Michael Kaminski'
-  },
-  { 
-    id: '3', 
-    patient: 'Mike Kam', 
-    status: 'ReportAssigned',
-    createdDate: '07/31/2024 -10:33:10 PM',
-    symptomDescription: 'Shortness of breath',
-    physician: 'Michael Kaminski'
-  },
+  { id: '1', patient: 'Joel Larson', status: 'ReportAssigned', createdDate: '08/12/2025 -08:12:32 PM', symptomDescription: 'Fainted', physician: 'Michael Kaminski' },
+  { id: '2', patient: 'Mike Kam', status: 'ReportAssigned', createdDate: '07/29/2025 -04:58:47 AM', symptomDescription: 'No symptoms reported', physician: 'Michael Kaminski' },
+  { id: '3', patient: 'Mike Kam', status: 'ReportAssigned', createdDate: '07/31/2024 -10:33:10 PM', symptomDescription: 'Shortness of breath', physician: 'Michael Kaminski' },
 ];
 
 interface TriageInfo {
@@ -67,257 +50,122 @@ const PatientTransmissions: React.FC = () => {
   const [triageEnabled, setTriageEnabled] = useState(true);
   const itemsPerPage = 10;
 
-  // Fetch AI triage data
   useEffect(() => {
     const fetchTriage = async () => {
       if (!triageEnabled) return;
-      
       setIsLoadingTriage(true);
       try {
-        const { data, error } = await supabase.functions.invoke('transmission-triage', {
-          body: { transmissions }
-        });
-
+        const { data, error } = await supabase.functions.invoke('transmission-triage', { body: { transmissions } });
         if (error) throw error;
         if (data.error) throw new Error(data.error);
-
-        // Map triage data by transmission ID
         const triageMap: Record<string, TriageInfo> = {};
         data.transmissions?.forEach((t: any) => {
-          triageMap[t.id] = {
-            alertLevel: t.alertLevel,
-            summary: t.summary,
-            symptomCorrelation: t.symptomCorrelation
-          };
+          triageMap[t.id] = { alertLevel: t.alertLevel, summary: t.summary, symptomCorrelation: t.symptomCorrelation };
         });
         setTriageData(triageMap);
-      } catch (err) {
-        console.error('Error fetching triage data:', err);
-        // Use fallback data
+      } catch {
         setTriageData({
-          '1': { alertLevel: 'high', summary: 'Syncope reported - requires urgent attention. Fainted symptom may correlate with cardiac pause or arrhythmia.', symptomCorrelation: 'Syncope often indicates significant arrhythmia' },
-          '2': { alertLevel: 'low', summary: 'No symptoms reported. Routine monitoring study with stable transmission.', symptomCorrelation: undefined },
-          '3': { alertLevel: 'moderate', summary: 'Shortness of breath reported. May indicate heart failure or arrhythmia. Correlate with ECG findings.', symptomCorrelation: 'SOB may correlate with AFib or heart failure' }
+          '1': { alertLevel: 'high', summary: 'Syncope reported - requires urgent attention.', symptomCorrelation: 'Syncope often indicates significant arrhythmia' },
+          '2': { alertLevel: 'low', summary: 'No symptoms reported. Routine monitoring.', symptomCorrelation: undefined },
+          '3': { alertLevel: 'moderate', summary: 'Shortness of breath reported. May indicate arrhythmia.', symptomCorrelation: 'SOB may correlate with AFib' }
         });
       } finally {
         setIsLoadingTriage(false);
       }
     };
-
     fetchTriage();
   }, [triageEnabled]);
 
-
-  const filteredTransmissions = transmissions.filter(transmission => {
-    const matchesSearch = 
-      transmission.patient.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      transmission.symptomDescription.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      transmission.physician.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesPhysician = selectedPhysicians.length === 0 || 
-      selectedPhysicians.includes(transmission.physician);
-    
+  const filteredTransmissions = transmissions.filter(t => {
+    const matchesSearch = t.patient.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.symptomDescription.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.physician.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesPhysician = selectedPhysicians.length === 0 || selectedPhysicians.includes(t.physician);
     return matchesSearch && matchesPhysician;
   });
 
   const totalResults = filteredTransmissions.length;
   const totalPages = Math.ceil(totalResults / itemsPerPage) || 1;
 
-  const handlePreviewReport = (transmission: Transmission) => {
-    setSelectedTransmission(transmission);
-    setIsPdfModalOpen(true);
-  };
-
-  const togglePhysician = (physician: string) => {
-    setSelectedPhysicians(prev => 
-      prev.includes(physician) 
-        ? prev.filter(p => p !== physician)
-        : [...prev, physician]
-    );
-  };
+  const columns = [
+    { key: 'patient', label: 'Patient', sortable: true, render: (t: Transmission) => (
+      <span className="font-medium text-accent">{t.patient}</span>
+    )},
+    { key: 'status', label: 'Status', render: (t: Transmission) => (
+      <StatusBadge label={t.status} variant="info" />
+    )},
+    { key: 'createdDate', label: 'Created', sortable: true, render: (t: Transmission) => (
+      <span className="text-muted-foreground text-xs tabular-nums">{t.createdDate}</span>
+    )},
+    { key: 'symptomDescription', label: 'Symptoms', render: (t: Transmission) => (
+      <span className="text-foreground">{t.symptomDescription}</span>
+    )},
+    { key: 'physician', label: 'Physician', sortable: true, render: (t: Transmission) => (
+      <span className="text-muted-foreground">{t.physician}</span>
+    )},
+    ...(triageEnabled ? [{
+      key: 'triage', label: 'AI Triage', render: (t: Transmission) => (
+        triageData[t.id] ? <TransmissionTriageAlert triage={triageData[t.id]} compact /> : <span className="text-xs text-muted-foreground">—</span>
+      ),
+    }] : []),
+    { key: 'actions', label: '', align: 'right' as const, render: (t: Transmission) => (
+      <Button variant="ghost" size="sm" className="h-8 text-xs font-medium text-accent hover:bg-accent/5 rounded-lg"
+        onClick={(e) => { e.stopPropagation(); setSelectedTransmission(t); setIsPdfModalOpen(true); }}>
+        Preview
+      </Button>
+    )},
+  ];
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">Patient Transmissions</h1>
-        <Button variant="outline" className="gap-2">
+    <div className="p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
+      <DataPageHeader title="Patient Transmissions" subtitle="Incoming patient data transmissions">
+        <Button variant="outline" className="gap-2 rounded-xl text-sm">
           <FileText className="h-4 w-4" />
-          View Historical Transmissions
+          Historical
         </Button>
         <Button 
           variant={triageEnabled ? "accent" : "outline"} 
-          className="gap-2"
+          className="gap-2 rounded-xl text-sm"
           onClick={() => setTriageEnabled(!triageEnabled)}
         >
           <Sparkles className="h-4 w-4" />
           {triageEnabled ? 'AI Triage On' : 'AI Triage Off'}
         </Button>
-      </div>
+      </DataPageHeader>
 
-      {/* AI Triage Loading */}
       {isLoadingTriage && triageEnabled && (
-        <div className="flex items-center gap-2 p-3 bg-accent/5 rounded-lg border border-accent/30">
+        <div className="flex items-center gap-2 p-3 bg-accent/5 rounded-2xl border border-accent/20">
           <Loader2 className="h-4 w-4 animate-spin text-accent" />
-          <span className="text-sm text-muted-foreground">AI analyzing transmissions for clinical urgency...</span>
+          <span className="text-sm text-muted-foreground">AI analyzing transmissions...</span>
         </div>
       )}
 
-      {/* Filters */}
-      <div className="flex items-center gap-4">
+      <SearchToolbar value={searchQuery} onChange={setSearchQuery} placeholder="Search transmissions...">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2">
-              <Filter className="h-4 w-4" />
-              Filter Physician ({selectedPhysicians.length})
+            <Button variant="outline" size="sm" className="gap-2 rounded-xl h-10 text-xs">
+              <Filter className="h-3.5 w-3.5" />
+              Physician {selectedPhysicians.length > 0 && `(${selectedPhysicians.length})`}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56 bg-popover border border-border z-50">
-            {physicians.map((physician) => (
-              <DropdownMenuCheckboxItem
-                key={physician}
-                checked={selectedPhysicians.includes(physician)}
-                onCheckedChange={() => togglePhysician(physician)}
-              >
-                {physician}
+          <DropdownMenuContent align="start" className="w-56">
+            {physicians.map((p) => (
+              <DropdownMenuCheckboxItem key={p} checked={selectedPhysicians.includes(p)} onCheckedChange={() => setSelectedPhysicians(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p])}>
+                {p}
               </DropdownMenuCheckboxItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+      </SearchToolbar>
 
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="input-medical w-full pl-11 py-3"
-          />
-        </div>
-      </div>
+      <ModernTable columns={columns} data={filteredTransmissions} keyExtractor={(t) => t.id} emptyMessage="No transmissions found" />
 
-      {/* Table */}
-      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    PATIENT
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    STATUS
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    CREATED DATE
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    SYMPTOM DESCRIPTION
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    PHYSICIAN
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                {triageEnabled && (
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                    AI TRIAGE
-                  </th>
-                )}
-                <th className="p-4"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTransmissions.map((transmission) => (
-                <tr key={transmission.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
-                  <td className="p-4 text-sm text-primary font-medium">{transmission.patient}</td>
-                  <td className="p-4 text-sm text-foreground">{transmission.status}</td>
-                  <td className="p-4 text-sm text-foreground">{transmission.createdDate}</td>
-                  <td className="p-4 text-sm text-foreground">{transmission.symptomDescription}</td>
-                  <td className="p-4 text-sm text-foreground">{transmission.physician}</td>
-                  {triageEnabled && (
-                    <td className="p-4">
-                      {triageData[transmission.id] ? (
-                        <TransmissionTriageAlert triage={triageData[transmission.id]} compact />
-                      ) : (
-                        <span className="text-xs text-muted-foreground">-</span>
-                      )}
-                    </td>
-                  )}
-                  <td className="p-4">
-                    <Button 
-                      variant="accent" 
-                      size="sm"
-                      onClick={() => handlePreviewReport(transmission)}
-                    >
-                      Preview Report
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ModernPagination currentPage={currentPage} totalPages={totalPages} totalResults={totalResults} itemsPerPage={itemsPerPage} onPageChange={setCurrentPage} />
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>Showing 1 to {Math.min(itemsPerPage, totalResults)} of {totalResults} results</span>
-        <div className="flex items-center gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((page) => (
-            <Button
-              key={page}
-              variant={currentPage === page ? "default" : "ghost"}
-              size="icon"
-              className={`h-8 w-8 ${currentPage === page ? 'bg-muted text-foreground' : ''}`}
-              onClick={() => setCurrentPage(page)}
-            >
-              {page}
-            </Button>
-          ))}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      {/* PDF Preview Modal */}
       {selectedTransmission && (
         <PDFPreviewModal
           isOpen={isPdfModalOpen}
-          onClose={() => {
-            setIsPdfModalOpen(false);
-            setSelectedTransmission(null);
-          }}
+          onClose={() => { setIsPdfModalOpen(false); setSelectedTransmission(null); }}
           patientName={selectedTransmission.patient}
           studyType="Patient Transmission"
         />

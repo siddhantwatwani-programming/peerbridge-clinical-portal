@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
-import { Search, ArrowUpDown, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { DataPageHeader } from '@/components/shared/DataPageHeader';
+import { SearchToolbar } from '@/components/shared/SearchToolbar';
+import { ModernTable } from '@/components/shared/ModernTable';
+import { ModernPagination } from '@/components/shared/ModernPagination';
+import { StatusBadge } from '@/components/shared/StatusBadge';
 import InventoryPredictionPanel from '@/components/inventory/InventoryPredictionPanel';
 import {
   DropdownMenu,
@@ -31,6 +36,12 @@ const devices: Device[] = [
   { id: '8', useByDate: 'Feb 26, 2025', serviceTag: 'JMSSVDNC6H1', firstName: 'Mike', lastName: 'Kam', sku: 'FP-20248', status: 'Assigned', productName: 'Peerbridge Cor Event ™' },
 ];
 
+const statusVariantMap: Record<string, 'success' | 'muted' | 'warning'> = {
+  'Assigned': 'success',
+  'Retired': 'muted',
+  'Unavailable': 'warning',
+};
+
 const InventoryDevices: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -38,182 +49,65 @@ const InventoryDevices: React.FC = () => {
   const itemsPerPage = 10;
 
   const filteredDevices = devices.filter(device => {
-    const matchesSearch = 
-      device.serviceTag.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch = device.serviceTag.toLowerCase().includes(searchQuery.toLowerCase()) ||
       device.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       device.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      device.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
       device.productName.toLowerCase().includes(searchQuery.toLowerCase());
-    
     const matchesStatus = statusFilters.length === 0 || statusFilters.includes(device.status);
-    
     return matchesSearch && matchesStatus;
   });
 
   const totalResults = filteredDevices.length;
-  const totalPages = Math.ceil(totalResults / itemsPerPage);
+  const totalPages = Math.ceil(totalResults / itemsPerPage) || 1;
 
-  const toggleStatusFilter = (status: string) => {
-    setStatusFilters(prev => 
-      prev.includes(status) 
-        ? prev.filter(s => s !== status)
-        : [...prev, status]
-    );
-  };
+  const columns = [
+    { key: 'serviceTag', label: 'Service Tag', sortable: true, render: (d: Device) => (
+      <span className="font-mono text-xs font-medium text-accent">{d.serviceTag}</span>
+    )},
+    { key: 'productName', label: 'Product', sortable: true, render: (d: Device) => (
+      <span className="font-medium text-foreground">{d.productName}</span>
+    )},
+    { key: 'patient', label: 'Patient', sortable: true, render: (d: Device) => (
+      <span className="text-foreground">{d.firstName} {d.lastName}</span>
+    )},
+    { key: 'sku', label: 'SKU', sortable: true, render: (d: Device) => (
+      <span className="text-muted-foreground font-mono text-xs">{d.sku}</span>
+    )},
+    { key: 'status', label: 'Status', render: (d: Device) => (
+      <StatusBadge label={d.status} variant={statusVariantMap[d.status] || 'default'} />
+    )},
+    { key: 'useByDate', label: 'Use By', sortable: true, render: (d: Device) => (
+      <span className="text-muted-foreground text-xs tabular-nums">{d.useByDate}</span>
+    )},
+  ];
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <h1 className="text-2xl font-semibold text-foreground">Inventory Devices</h1>
+    <div className="p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
+      <DataPageHeader title="Inventory Devices" subtitle={`${devices.length} devices tracked`} />
 
-      {/* Search and Filter */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="input-medical w-full pl-11 py-3"
-          />
-        </div>
-        
+      <SearchToolbar value={searchQuery} onChange={setSearchQuery} placeholder="Search devices...">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2">
-              <Filter className="h-4 w-4" />
-              Filter Status ({statusFilters.length})
+            <Button variant="outline" size="sm" className="gap-2 rounded-xl h-10 text-xs">
+              <Filter className="h-3.5 w-3.5" />
+              Status {statusFilters.length > 0 && `(${statusFilters.length})`}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-card border border-border z-50">
-            <DropdownMenuCheckboxItem
-              checked={statusFilters.includes('Assigned')}
-              onCheckedChange={() => toggleStatusFilter('Assigned')}
-            >
-              Assigned
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={statusFilters.includes('Retired')}
-              onCheckedChange={() => toggleStatusFilter('Retired')}
-            >
-              Retired
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={statusFilters.includes('Unavailable')}
-              onCheckedChange={() => toggleStatusFilter('Unavailable')}
-            >
-              Unavailable
-            </DropdownMenuCheckboxItem>
+          <DropdownMenuContent align="start" className="w-48">
+            {['Assigned', 'Retired', 'Unavailable'].map(s => (
+              <DropdownMenuCheckboxItem key={s} checked={statusFilters.includes(s)} onCheckedChange={() => setStatusFilters(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])}>
+                {s}
+              </DropdownMenuCheckboxItem>
+            ))}
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
+      </SearchToolbar>
 
-      {/* AI Prediction Engine */}
       <InventoryPredictionPanel devices={devices} />
 
-      {/* Table */}
-      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    USE BY DATE
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    SERVICE TAG
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    FIRST NAME
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    LAST NAME
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    SKU
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    STATUS
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    PRODUCT NAME
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredDevices.map((device) => (
-                <tr key={device.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
-                  <td className="p-4 text-sm text-foreground">{device.useByDate}</td>
-                  <td className="p-4 text-sm text-primary font-medium">{device.serviceTag}</td>
-                  <td className="p-4 text-sm text-foreground">{device.firstName}</td>
-                  <td className="p-4 text-sm text-foreground">{device.lastName}</td>
-                  <td className="p-4 text-sm text-foreground">{device.sku}</td>
-                  <td className="p-4 text-sm text-foreground">{device.status}</td>
-                  <td className="p-4 text-sm text-foreground">{device.productName}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ModernTable columns={columns} data={filteredDevices} keyExtractor={(d) => d.id} emptyMessage="No devices found" />
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>Showing 1 to {Math.min(itemsPerPage, totalResults)} of {totalResults} results</span>
-        <div className="flex items-center gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((page) => (
-            <Button
-              key={page}
-              variant={currentPage === page ? "default" : "ghost"}
-              size="icon"
-              className={`h-8 w-8 ${currentPage === page ? 'bg-muted text-foreground' : ''}`}
-              onClick={() => setCurrentPage(page)}
-            >
-              {page}
-            </Button>
-          ))}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      <ModernPagination currentPage={currentPage} totalPages={totalPages} totalResults={totalResults} itemsPerPage={itemsPerPage} onPageChange={setCurrentPage} />
     </div>
   );
 };

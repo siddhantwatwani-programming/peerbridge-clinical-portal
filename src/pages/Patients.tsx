@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { DataPageHeader } from '@/components/shared/DataPageHeader';
+import { SearchToolbar } from '@/components/shared/SearchToolbar';
+import { ModernTable } from '@/components/shared/ModernTable';
+import { ModernPagination } from '@/components/shared/ModernPagination';
 
 interface Patient {
   id: string;
@@ -39,140 +43,63 @@ const Patients: React.FC = () => {
     patient.mrn.includes(searchQuery)
   );
 
+  const columns = [
+    { key: 'mrn', label: 'MRN', sortable: true, render: (p: Patient) => (
+      <span className="font-medium text-accent">{p.mrn}</span>
+    )},
+    { key: 'lastName', label: 'Last Name', sortable: true, render: (p: Patient) => (
+      <span className="font-medium text-foreground">{p.lastName}</span>
+    )},
+    { key: 'firstName', label: 'First Name', sortable: true, render: (p: Patient) => (
+      <span className="text-foreground">{p.firstName}</span>
+    )},
+    { key: 'dateOfBirth', label: 'Date of Birth', sortable: true, render: (p: Patient) => (
+      <span className="text-muted-foreground">{p.dateOfBirth}</span>
+    )},
+    { key: 'phoneNumber', label: 'Phone', sortable: true, render: (p: Patient) => (
+      <span className="text-muted-foreground tabular-nums">{p.phoneNumber}</span>
+    )},
+    { key: 'actions', label: '', align: 'center' as const, render: (p: Patient) => (
+      <Button 
+        variant="ghost" 
+        size="sm"
+        className="h-8 gap-1.5 text-accent hover:text-accent hover:bg-accent/5 rounded-lg text-xs font-medium"
+        onClick={(e) => {
+          e.stopPropagation();
+          navigate(`/patients/create-order?patient=${encodeURIComponent(p.firstName + ' ' + p.lastName)}&mrn=${p.mrn}`);
+        }}
+      >
+        <Plus className="h-3.5 w-3.5" />
+        New Order
+      </Button>
+    )},
+  ];
+
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">Patients</h1>
-        <Button variant="accent" className="gap-2" onClick={() => navigate('/patients/add')}>
+    <div className="p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
+      <DataPageHeader title="Patients" subtitle={`${totalResults} patients enrolled`}>
+        <Button variant="accent" className="gap-2 rounded-xl shadow-lg shadow-accent/10" onClick={() => navigate('/patients/add')}>
           <Plus className="h-4 w-4" />
-          Add a New Patient
+          Add Patient
         </Button>
-      </div>
+      </DataPageHeader>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Search"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="input-medical w-full pl-11 py-3"
-        />
-      </div>
+      <SearchToolbar value={searchQuery} onChange={setSearchQuery} placeholder="Search by name, MRN..." />
 
-      {/* Table */}
-      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    MRN
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    LAST NAME
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    FIRST NAME
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    DATE OF BIRTH
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    PHONE NUMBER
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="text-center p-4 text-sm font-medium text-muted-foreground">
-                  CREATE NEW ORDER
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPatients.map((patient) => (
-                <tr key={patient.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
-                  <td className="p-4 text-sm text-primary font-medium">
-                    {patient.mrn}
-                  </td>
-                  <td className="p-4 text-sm text-foreground">
-                    {patient.lastName}
-                  </td>
-                  <td className="p-4 text-sm text-foreground">
-                    {patient.firstName}
-                  </td>
-                  <td className="p-4 text-sm text-muted-foreground">
-                    {patient.dateOfBirth}
-                  </td>
-                  <td className="p-4 text-sm text-foreground">
-                    {patient.phoneNumber}
-                  </td>
-                  <td className="p-4 text-center">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-accent hover:text-accent hover:bg-accent/10"
-                      onClick={() => navigate(`/patients/create-order?patient=${encodeURIComponent(patient.firstName + ' ' + patient.lastName)}&mrn=${patient.mrn}`)}
-                    >
-                      <Plus className="h-5 w-5" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ModernTable
+        columns={columns}
+        data={filteredPatients}
+        keyExtractor={(p) => p.id}
+        emptyMessage="No patients found"
+      />
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>Showing 1 to {itemsPerPage} of {totalResults} results</span>
-        <div className="flex items-center gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          {[1, 2, 3, 4].map((page) => (
-            <Button
-              key={page}
-              variant={currentPage === page ? "default" : "ghost"}
-              size="icon"
-              className={`h-8 w-8 ${currentPage === page ? 'bg-muted text-foreground' : ''}`}
-              onClick={() => setCurrentPage(page)}
-            >
-              {page}
-            </Button>
-          ))}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      <ModernPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalResults={totalResults}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };
