@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from '@/components/Sidebar';
 import { TopHeader } from '@/components/TopHeader';
-import { ClinicalCopilot } from '@/components/ClinicalCopilot';
 import { cn } from '@/lib/utils';
 
 export const SidebarLayout: React.FC = () => {
@@ -25,7 +24,6 @@ export const SidebarLayout: React.FC = () => {
           <Outlet />
         </main>
       </div>
-      <ClinicalCopilot />
     </div>
   );
 };
