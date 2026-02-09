@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Eye, EyeOff, Shield, Mail, Play } from 'lucide-react';
+import { Lock, Eye, EyeOff, Shield, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -37,32 +37,24 @@ const Login: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    try {
-      const { error } = await signIn(email, password);
-
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Authentication Failed",
-          description: error,
-        });
-      } else {
-        toast({
-          title: "Welcome back!",
-          description: "Successfully authenticated.",
-        });
-        navigate('/select-site', { replace: true });
-      }
-    } catch (err) {
-      console.error('Sign in error:', err);
+    // Hardcoded credential check
+    if (email === 'admin@pbh.com' && password === 'admin@1234') {
       toast({
-        variant: "destructive",
-        title: "Authentication Failed",
-        description: "An unexpected error occurred",
+        title: "Welcome back!",
+        description: "Successfully authenticated.",
       });
-    } finally {
+      navigate('/select-site', { replace: true });
       setIsLoading(false);
+      return;
     }
+
+    // If credentials don't match, show error
+    toast({
+      variant: "destructive",
+      title: "Authentication Failed",
+      description: "Invalid email or password.",
+    });
+    setIsLoading(false);
   };
 
   return (
@@ -174,22 +166,11 @@ const Login: React.FC = () => {
             </form>
           </div>
 
-          {/* Footer */}
-          <div className="px-8 pb-6 space-y-3">
+          <div className="px-8 pb-6">
             <div className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-success/5 border border-success/10 text-success text-xs font-medium">
               <Shield className="h-3.5 w-3.5" />
               <span>HIPAA Compliant Session</span>
             </div>
-
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleDemoMode}
-              className="w-full h-10 text-muted-foreground hover:text-accent rounded-xl text-xs"
-            >
-              <Play className="h-3.5 w-3.5 mr-2" />
-              Skip to Demo
-            </Button>
           </div>
         </div>
 
