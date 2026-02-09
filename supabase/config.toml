@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.inventory-prediction]
 verify_jwt = false
+
+[functions.icd10-suggest]
+verify_jwt = false
