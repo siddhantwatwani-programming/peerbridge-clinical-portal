@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.voice-form-parser]
 verify_jwt = false
+
+[functions.inventory-prediction]
+verify_jwt = false

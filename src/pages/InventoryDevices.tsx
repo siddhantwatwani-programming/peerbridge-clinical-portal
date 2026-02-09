@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, ArrowUpDown, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import InventoryPredictionPanel from '@/components/inventory/InventoryPredictionPanel';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -107,6 +108,9 @@ const InventoryDevices: React.FC = () => {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* AI Prediction Engine */}
+      <InventoryPredictionPanel devices={devices} />
 
       {/* Table */}
       <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
