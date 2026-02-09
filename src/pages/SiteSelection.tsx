@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building, MapPin, Users, ChevronRight, LogOut } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Building, MapPin, Users, LogOut, Heart, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useSite } from "@/contexts/SiteContext";
@@ -10,11 +9,38 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import peerbridgeLogo from "@/assets/peerbridge-logo.jpg";
 
+// Icon set for variety
+const siteIcons = [Heart, Activity, Building, Heart, Activity, Building, Heart, Activity, Building];
+const siteColors = [
+  "from-accent/20 to-accent/5 border-accent/20",
+  "from-sky-500/15 to-sky-500/5 border-sky-500/20",
+  "from-violet-500/15 to-violet-500/5 border-violet-500/20",
+  "from-emerald-500/15 to-emerald-500/5 border-emerald-500/20",
+  "from-rose-500/15 to-rose-500/5 border-rose-500/20",
+  "from-amber-500/15 to-amber-500/5 border-amber-500/20",
+  "from-cyan-500/15 to-cyan-500/5 border-cyan-500/20",
+  "from-indigo-500/15 to-indigo-500/5 border-indigo-500/20",
+  "from-pink-500/15 to-pink-500/5 border-pink-500/20",
+];
+const iconColors = [
+  "text-accent",
+  "text-sky-500",
+  "text-violet-500",
+  "text-emerald-500",
+  "text-rose-500",
+  "text-amber-500",
+  "text-cyan-500",
+  "text-indigo-500",
+  "text-pink-500",
+];
+
 const SiteSelection: React.FC = () => {
   const navigate = useNavigate();
   const { sites, memberships, switchSite, isLoading: sitesLoading, isDemoMode, exitDemoMode } = useSite();
   const { isAuthenticated, isLoading: authLoading, signOut, user } = useAuth();
+  const { profile } = useAuth();
   const [hasCheckedSession, setHasCheckedSession] = useState(false);
+  const [hoveredSite, setHoveredSite] = useState<string | null>(null);
 
   useEffect(() => {
     if (isDemoMode) { setHasCheckedSession(true); return; }
@@ -26,12 +52,8 @@ const SiteSelection: React.FC = () => {
     if (!authLoading && !isAuthenticated && !hasCheckedSession) checkSession();
   }, [authLoading, isAuthenticated, hasCheckedSession, navigate, isDemoMode]);
 
-  useEffect(() => {
-    if (!sitesLoading && sites.length === 1) {
-      switchSite(sites[0].id);
-      navigate("/dashboard", { replace: true });
-    }
-  }, [sites, sitesLoading, switchSite, navigate]);
+  // Don't auto-redirect for single site — let user see the welcome screen
+  // (removed the auto-redirect for 1 site)
 
   const handleSiteSelect = (siteId: string) => {
     switchSite(siteId);
@@ -49,6 +71,10 @@ const SiteSelection: React.FC = () => {
     return membership?.role?.name || "Member";
   };
 
+  const displayName = isDemoMode
+    ? "Dr. Demo"
+    : profile?.full_name || user?.email?.split("@")[0] || "Doctor";
+
   if (!isDemoMode && (authLoading || sitesLoading)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -62,14 +88,14 @@ const SiteSelection: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Subtle bg */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/[0.03] rounded-full blur-[100px] -translate-y-1/3 translate-x-1/4" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/[0.02] rounded-full blur-[80px] translate-y-1/4 -translate-x-1/4" />
+      {/* Ambient blurs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-accent/[0.04] rounded-full blur-[120px]" />
+        <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-accent/[0.03] rounded-full blur-[100px]" />
       </div>
 
       {/* Header */}
-      <header className="w-full p-6 flex items-center justify-between relative z-10">
+      <header className="w-full px-8 py-5 flex items-center justify-between relative z-10">
         <img src={peerbridgeLogo} alt="Peerbridge Health" className="h-10 w-auto" />
         <div className="flex items-center gap-3">
           {isDemoMode && (
@@ -77,74 +103,117 @@ const SiteSelection: React.FC = () => {
               Demo Mode
             </Badge>
           )}
-          <span className="text-xs text-muted-foreground">{isDemoMode ? "Demo User" : user?.email}</span>
-          <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground hover:text-foreground rounded-xl text-xs">
-            <LogOut className="h-4 w-4 mr-1.5" />
+          <span className="text-xs text-muted-foreground hidden sm:block">
+            {isDemoMode ? "Demo User" : user?.email}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSignOut}
+            className="text-muted-foreground hover:text-foreground rounded-xl text-xs gap-1.5"
+          >
+            <LogOut className="h-4 w-4" />
             Sign Out
           </Button>
         </div>
       </header>
 
       {/* Content */}
-      <main className="flex-1 flex items-center justify-center p-6 relative z-10">
-        <div className="w-full max-w-2xl">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-accent/8 mb-4">
-              <Building className="h-7 w-7 text-accent" />
-            </div>
-            <h1 className="text-2xl font-display font-bold text-foreground mb-2">Select a Clinical Site</h1>
-            <p className="text-sm text-muted-foreground">Choose a site to access. Switch anytime from the dashboard.</p>
+      <main className="flex-1 flex flex-col items-center justify-center px-6 pb-12 relative z-10">
+        <div className="w-full max-w-5xl">
+          {/* Welcome */}
+          <div className="text-center mb-10">
+            <p className="text-sm font-medium text-accent mb-2 tracking-wide uppercase">
+              Welcome back
+            </p>
+            <h1 className="text-3xl sm:text-4xl font-display font-bold text-foreground mb-3">
+              {displayName}
+            </h1>
+            <p className="text-muted-foreground text-sm max-w-md mx-auto">
+              Select a clinical site to get started. You can switch between sites anytime from the dashboard.
+            </p>
           </div>
 
+          {/* Sites Grid */}
           {sites.length === 0 ? (
-            <Card className="rounded-2xl border-border/60">
-              <CardContent className="py-12 text-center">
-                <Building className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" />
-                <h2 className="text-lg font-semibold text-foreground mb-2">No Sites Available</h2>
-                <p className="text-sm text-muted-foreground mb-6">Contact your administrator for access.</p>
-                <Button variant="outline" onClick={handleSignOut} className="rounded-xl">Sign Out</Button>
-              </CardContent>
-            </Card>
+            <div className="text-center py-16">
+              <Building className="h-14 w-14 mx-auto mb-4 text-muted-foreground/30" />
+              <h2 className="text-lg font-semibold text-foreground mb-2">No Sites Available</h2>
+              <p className="text-sm text-muted-foreground mb-6">Contact your administrator for site access.</p>
+              <Button variant="outline" onClick={handleSignOut} className="rounded-xl">
+                Sign Out
+              </Button>
+            </div>
           ) : (
-            <div className="grid gap-3">
-              {sites.map((site) => (
-                <Card
-                  key={site.id}
-                  className="rounded-2xl border-border/60 cursor-pointer transition-all duration-300 hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 group"
-                  onClick={() => handleSiteSelect(site.id)}
-                >
-                  <CardContent className="p-5">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-4 min-w-0">
-                        <div className="h-11 w-11 rounded-xl bg-accent/8 flex items-center justify-center shrink-0 group-hover:bg-accent/12 transition-colors">
-                          <Building className="h-5 w-5 text-accent" />
-                        </div>
-                        <div className="min-w-0">
-                          <h3 className="font-semibold text-foreground truncate">{site.name}</h3>
-                          {site.address && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 truncate">
-                              <MapPin className="h-3 w-3 shrink-0" />
-                              <span className="truncate">{site.address}</span>
-                            </p>
-                          )}
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="secondary" className="text-xs rounded-lg">
-                              <Users className="h-3 w-3 mr-1" />
-                              {getRoleName(site.id)}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground/30 group-hover:text-accent group-hover:translate-x-0.5 transition-all shrink-0" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {sites.map((site, i) => {
+                const Icon = siteIcons[i % siteIcons.length];
+                const colorClass = siteColors[i % siteColors.length];
+                const iconColor = iconColors[i % iconColors.length];
+                const isHovered = hoveredSite === site.id;
+
+                return (
+                  <button
+                    key={site.id}
+                    onClick={() => handleSiteSelect(site.id)}
+                    onMouseEnter={() => setHoveredSite(site.id)}
+                    onMouseLeave={() => setHoveredSite(null)}
+                    className={cn(
+                      "group relative text-left rounded-2xl border bg-gradient-to-br p-5 transition-all duration-300",
+                      colorClass,
+                      isHovered
+                        ? "shadow-xl shadow-accent/10 scale-[1.02] border-accent/40"
+                        : "shadow-sm hover:shadow-lg"
+                    )}
+                  >
+                    {/* Icon */}
+                    <div className={cn(
+                      "h-12 w-12 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300",
+                      "bg-card/80 backdrop-blur-sm shadow-sm",
+                      isHovered && "scale-110"
+                    )}>
+                      <Icon className={cn("h-6 w-6", iconColor)} />
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
+
+                    {/* Name */}
+                    <h3 className="font-semibold text-foreground text-[15px] mb-1.5 truncate">
+                      {site.name}
+                    </h3>
+
+                    {/* Address */}
+                    {site.address && (
+                      <p className="text-xs text-muted-foreground flex items-start gap-1.5 mb-3 line-clamp-2">
+                        <MapPin className="h-3 w-3 shrink-0 mt-0.5" />
+                        <span>{site.address}</span>
+                      </p>
+                    )}
+
+                    {/* Role badge */}
+                    <Badge
+                      variant="secondary"
+                      className="text-[11px] rounded-lg font-medium"
+                    >
+                      <Users className="h-3 w-3 mr-1" />
+                      {getRoleName(site.id)}
+                    </Badge>
+
+                    {/* Select indicator */}
+                    <div className={cn(
+                      "absolute top-4 right-4 h-8 w-8 rounded-lg flex items-center justify-center transition-all duration-300",
+                      isHovered
+                        ? "bg-accent text-accent-foreground shadow-md"
+                        : "bg-card/60 text-muted-foreground/40"
+                    )}>
+                      <span className="text-xs font-bold">→</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
 
-          <p className="text-center text-[11px] text-muted-foreground/60 mt-8">
-            Secure HIPAA-compliant session. All data encrypted.
+          <p className="text-center text-[11px] text-muted-foreground/50 mt-10">
+            Secure HIPAA-compliant session · All data encrypted · Multi-site access
           </p>
         </div>
       </main>

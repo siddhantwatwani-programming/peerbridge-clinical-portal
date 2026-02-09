@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserCircle, Settings, LogOut, Building, ChevronDown, Bell } from 'lucide-react';
+import { UserCircle, Settings, LogOut, Building, ChevronDown, Bell, ArrowLeftRight } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,6 +70,19 @@ export const TopHeader: React.FC = () => {
             <span className="text-xs text-muted-foreground hidden md:block mr-2">
               {profile.specialty || 'Clinician'}
             </span>
+          )}
+
+          {/* Switch Sites — always visible */}
+          {sites.length > 1 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSiteSwitcherOpen(true)}
+              className="rounded-xl text-xs gap-1.5 border-border/60 hover:border-accent/40 hover:bg-accent/5 transition-all"
+            >
+              <ArrowLeftRight className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Switch Sites</span>
+            </Button>
           )}
 
           {/* Notifications */}
