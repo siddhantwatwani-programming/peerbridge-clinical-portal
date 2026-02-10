@@ -241,6 +241,7 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
   const [currentField, setCurrentField] = useState<string | null>(null);
   const isSpeakingRef = useRef(false);
   const ignoreTranscriptsUntilRef = useRef(0);
+  const lastSpokenTextRef = useRef('');
   const voiceFlowStateRef = useRef(voiceFlowState);
   const currentFieldRef = useRef(currentField);
   const patientDataRef = useRef(patientData);
@@ -321,22 +322,27 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
   // IMPORTANT: Does NOT stop/restart recognition to avoid race conditions with onend events
   const speakWithPause = useCallback((text: string): Promise<void> => {
     return new Promise((resolve) => {
+      // Store spoken text for echo filtering
+      lastSpokenTextRef.current = text.toLowerCase();
+      
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         isSpeakingRef.current = true;
+        // Pre-set ignore to far future while speaking
+        ignoreTranscriptsUntilRef.current = Date.now() + 30000;
 
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 1.0;
         utterance.pitch = 1.0;
 
-        const fallbackMs = Math.min(10000, Math.max(2500, Math.round(text.length * 50)));
+        const fallbackMs = Math.min(15000, Math.max(3000, Math.round(text.length * 80)));
         let settled = false;
         const settle = () => {
           if (settled) return;
           settled = true;
           isSpeakingRef.current = false;
-          // Ignore any transcripts captured during TTS + buffer after
-          ignoreTranscriptsUntilRef.current = Date.now() + 1200;
+          // Generous buffer after TTS finishes to let mic clear
+          ignoreTranscriptsUntilRef.current = Date.now() + 2000;
           resolve();
         };
 
@@ -363,6 +369,24 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
     if (Date.now() < ignoreTranscriptsUntilRef.current) return;
     
     const lowerTranscript = transcript.toLowerCase().trim();
+    
+    // Filter out TTS echo: if transcript substantially overlaps with what was just spoken, discard it
+    const lastSpoken = lastSpokenTextRef.current;
+    if (lastSpoken) {
+      const spokenWords = lastSpoken.split(/\s+/).filter(w => w.length > 3);
+      const transcriptWords = lowerTranscript.split(/\s+/).filter(w => w.length > 3);
+      if (transcriptWords.length > 0 && spokenWords.length > 0) {
+        const matchCount = transcriptWords.filter(w => spokenWords.some(sw => sw.includes(w) || w.includes(sw))).length;
+        const matchRatio = matchCount / transcriptWords.length;
+        if (matchRatio > 0.4) {
+          console.log('Filtered TTS echo:', transcript);
+          return; // This is the TTS being picked up by the mic
+        }
+      }
+    }
+    // Clear last spoken after a valid non-echo transcript
+    lastSpokenTextRef.current = '';
+    
     const flowState = voiceFlowStateRef.current;
     const field = currentFieldRef.current;
     const data = patientDataRef.current;
