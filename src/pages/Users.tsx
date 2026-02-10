@@ -6,6 +6,7 @@ import { DataPageHeader } from '@/components/shared/DataPageHeader';
 import { SearchToolbar } from '@/components/shared/SearchToolbar';
 import { ModernTable } from '@/components/shared/ModernTable';
 import { ModernPagination } from '@/components/shared/ModernPagination';
+import { AIInsightsCard } from '@/components/shared/AIInsightsCard';
 
 interface User {
   id: string;
@@ -80,6 +81,15 @@ const Users: React.FC = () => {
         totalResults={totalResults}
         itemsPerPage={itemsPerPage}
         onPageChange={setCurrentPage}
+      />
+
+      <AIInsightsCard
+        context="Site settings insights powered by AI"
+        insights={[
+          { icon: 'trend', text: '140 users registered. 10 users were active in the last 7 days.' },
+          { icon: 'alert', text: '2 user accounts have not been updated in over 6 months — consider reviewing access.' },
+          { icon: 'success', text: 'All user accounts have valid credentials and proper role assignments.' },
+        ]}
       />
     </div>
   );

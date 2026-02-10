@@ -6,6 +6,7 @@ import { DataPageHeader } from '@/components/shared/DataPageHeader';
 import { SearchToolbar } from '@/components/shared/SearchToolbar';
 import { ModernTable } from '@/components/shared/ModernTable';
 import { ModernPagination } from '@/components/shared/ModernPagination';
+import { AIInsightsCard } from '@/components/shared/AIInsightsCard';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import {
   DropdownMenu,
@@ -174,6 +175,15 @@ const Studies: React.FC = () => {
         totalResults={filteredAndSortedData.length}
         itemsPerPage={itemsPerPage}
         onPageChange={setCurrentPage}
+      />
+
+      <AIInsightsCard
+        context="Study monitoring insights powered by AI"
+        insights={[
+          { icon: 'trend', text: '12 active studies in progress. Most common type is 24 Hours Holter (83% of active studies).' },
+          { icon: 'alert', text: '4 studies are marked "Ready To Start" for over 3 days — consider initiating monitoring.' },
+          { icon: 'success', text: 'No studies have exceeded their planned monitoring duration. Compliance rate is at 100%.' },
+        ]}
       />
     </div>
   );

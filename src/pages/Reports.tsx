@@ -8,6 +8,7 @@ import { SearchToolbar } from '@/components/shared/SearchToolbar';
 import { ModernTable } from '@/components/shared/ModernTable';
 import { ModernPagination } from '@/components/shared/ModernPagination';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { AIInsightsCard } from '@/components/shared/AIInsightsCard';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -184,6 +185,15 @@ const Reports: React.FC = () => {
       <ModernTable columns={columns} data={filteredReports} keyExtractor={(r) => r.id} emptyMessage="No reports found" />
 
       <ModernPagination currentPage={currentPage} totalPages={totalPages} totalResults={totalResults} itemsPerPage={itemsPerPage} onPageChange={setCurrentPage} />
+
+      <AIInsightsCard
+        context="Report review insights powered by AI"
+        insights={[
+          { icon: 'trend', text: '2 reports ready for physician sign-off. Average review time is 2.4 hours per report.' },
+          { icon: 'alert', text: '1 report has been pending review for over 24 hours. Prioritize for timely patient care.' },
+          { icon: 'success', text: 'Batch mode available — both reports share similar study types and may qualify for batch sign-off.' },
+        ]}
+      />
 
       {selectedReport && (
         <PDFPreviewModal

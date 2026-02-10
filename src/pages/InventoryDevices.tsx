@@ -6,6 +6,7 @@ import { SearchToolbar } from '@/components/shared/SearchToolbar';
 import { ModernTable } from '@/components/shared/ModernTable';
 import { ModernPagination } from '@/components/shared/ModernPagination';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { AIInsightsCard } from '@/components/shared/AIInsightsCard';
 import InventoryPredictionPanel from '@/components/inventory/InventoryPredictionPanel';
 import {
   DropdownMenu,
@@ -108,6 +109,14 @@ const InventoryDevices: React.FC = () => {
       <ModernTable columns={columns} data={filteredDevices} keyExtractor={(d) => d.id} emptyMessage="No devices found" />
 
       <ModernPagination currentPage={currentPage} totalPages={totalPages} totalResults={totalResults} itemsPerPage={itemsPerPage} onPageChange={setCurrentPage} />
+      <AIInsightsCard
+        context="Inventory management insights powered by AI"
+        insights={[
+          { icon: 'trend', text: '8 devices tracked. 50% are currently assigned, 37.5% retired, and 12.5% unavailable.' },
+          { icon: 'alert', text: '1 device is marked unavailable — investigate for potential maintenance or replacement needs.' },
+          { icon: 'success', text: 'All assigned devices are within their use-by dates. No expiration alerts at this time.' },
+        ]}
+      />
     </div>
   );
 };
