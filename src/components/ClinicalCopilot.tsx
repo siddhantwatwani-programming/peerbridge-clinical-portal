@@ -317,14 +317,13 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
     };
   }, [isDragging]);
 
-  // Text-to-speech that pauses recognition to avoid feedback loop
+  // Text-to-speech that mutes transcript processing to avoid feedback loop
+  // IMPORTANT: Does NOT stop/restart recognition to avoid race conditions with onend events
   const speakWithPause = useCallback((text: string): Promise<void> => {
     return new Promise((resolve) => {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         isSpeakingRef.current = true;
-        // Stop listening while speaking
-        stopListeningFnRef.current?.();
 
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 1.0;
@@ -336,11 +335,8 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
           if (settled) return;
           settled = true;
           isSpeakingRef.current = false;
-          ignoreTranscriptsUntilRef.current = Date.now() + 800;
-          // Resume listening after speaking
-          setTimeout(() => {
-            startListeningFnRef.current?.();
-          }, 150);
+          // Ignore any transcripts captured during TTS + buffer after
+          ignoreTranscriptsUntilRef.current = Date.now() + 1200;
           resolve();
         };
 
@@ -354,7 +350,7 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
     });
   }, []);
 
-  // Refs for start/stop listening (set after hook call)
+  // Refs for start/stop listening (kept for potential future use)
   const startListeningFnRef = useRef<() => void>();
   const stopListeningFnRef = useRef<() => void>();
 
@@ -404,48 +400,56 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
       const fieldIndex = patientFields.findIndex(f => f.key === field);
       const fieldLabel = patientFields[fieldIndex]?.label || field;
       
-      const newData = { ...data, [field]: transcript };
-      setPatientData(newData);
-      
-      const userMsg: Message = {
-        id: Date.now().toString(),
-        role: 'user',
-        content: `**${fieldLabel}:** ${transcript}`,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, userMsg]);
-      
-      const nextFieldIndex = fieldIndex + 1;
-      if (nextFieldIndex < patientFields.length) {
-        const nextField = patientFields[nextFieldIndex];
-        setCurrentField(nextField.key);
+      // Use functional update to avoid losing previously collected fields
+      setPatientData(prev => {
+        const newData = { ...prev, [field]: transcript };
+        patientDataRef.current = newData; // sync ref immediately
         
-        const aiMsg: Message = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `✓ Got it! Now please say the **${nextField.label}**:`,
+        const userMsg: Message = {
+          id: Date.now().toString(),
+          role: 'user',
+          content: `**${fieldLabel}:** ${transcript}`,
           timestamp: new Date()
         };
-        setMessages(prev => [...prev, aiMsg]);
-        speakWithPause(`Got it! Now please say the ${nextField.label}`);
-      } else {
-        setCurrentField(null);
-        setVoiceFlowState('awaiting_command');
+        setMessages(msgs => [...msgs, userMsg]);
         
-        const summaryMsg: Message = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `✅ **Patient Registration Complete!**\n\n**Summary:**\n- First Name: ${newData.firstName}\n- Last Name: ${newData.lastName}\n- DOB: ${newData.dob}\n- MRN: ${newData.mrn}\n- Gender: ${newData.gender}\n- Cell Phone: ${newData.cellPhone}\n\nSay **"confirm"** to proceed to the registration form, or **"start over"** to try again.`,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, summaryMsg]);
-        speakWithPause("Patient registration complete! Say confirm to proceed, or start over to try again.");
-      }
+        const nextFieldIndex = fieldIndex + 1;
+        if (nextFieldIndex < patientFields.length) {
+          const nextField = patientFields[nextFieldIndex];
+          setCurrentField(nextField.key);
+          currentFieldRef.current = nextField.key; // sync ref immediately
+          
+          const aiMsg: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: `✓ Got it! Now please say the **${nextField.label}**:`,
+            timestamp: new Date()
+          };
+          setMessages(msgs => [...msgs, aiMsg]);
+          speakWithPause(`Got it! Now please say the ${nextField.label}`);
+        } else {
+          setCurrentField(null);
+          currentFieldRef.current = null;
+          setVoiceFlowState('awaiting_command');
+          voiceFlowStateRef.current = 'awaiting_command';
+          
+          const summaryMsg: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: `✅ **Patient Registration Complete!**\n\n**Summary:**\n- First Name: ${newData.firstName}\n- Last Name: ${newData.lastName}\n- DOB: ${newData.dob}\n- MRN: ${newData.mrn}\n- Gender: ${newData.gender}\n- Cell Phone: ${newData.cellPhone}\n\nSay **"confirm"** to proceed to the registration form, or **"start over"** to try again.`,
+            timestamp: new Date()
+          };
+          setMessages(msgs => [...msgs, summaryMsg]);
+          speakWithPause("Patient registration complete! Say confirm to proceed, or start over to try again.");
+        }
+        
+        return newData;
+      });
       return;
     }
     
     // Handle confirm/start over
-    if (lowerTranscript.includes('confirm') && Object.keys(data).length > 0) {
+    if (lowerTranscript.includes('confirm') && Object.keys(patientDataRef.current).length > 0) {
       toast.success('Navigating to registration form with patient data');
       speakWithPause("Opening registration form with patient data");
       navigate('/patients/add');
