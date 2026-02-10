@@ -239,14 +239,24 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
   const [voiceFlowState, setVoiceFlowState] = useState<'idle' | 'awaiting_command' | 'collecting_patient'>('idle');
   const [patientData, setPatientData] = useState<Record<string, string>>({});
   const [currentField, setCurrentField] = useState<string | null>(null);
+  const isSpeakingRef = useRef(false);
+  const ignoreTranscriptsUntilRef = useRef(0);
+  const voiceFlowStateRef = useRef(voiceFlowState);
+  const currentFieldRef = useRef(currentField);
+  const patientDataRef = useRef(patientData);
+
+  // Keep refs in sync
+  useEffect(() => { voiceFlowStateRef.current = voiceFlowState; }, [voiceFlowState]);
+  useEffect(() => { currentFieldRef.current = currentField; }, [currentField]);
+  useEffect(() => { patientDataRef.current = patientData; }, [patientData]);
   
   const patientFields = [
-    { key: 'firstName', label: 'First Name', required: true },
-    { key: 'lastName', label: 'Last Name', required: true },
-    { key: 'dob', label: 'Date of Birth (say like January 15, 1980)', required: true },
-    { key: 'mrn', label: 'Medical Record Number', required: true },
-    { key: 'gender', label: 'Gender (Male, Female, or Other)', required: true },
-    { key: 'cellPhone', label: 'Cell Phone Number', required: true },
+    { key: 'firstName', label: 'First Name', question: 'Please say the first name.', required: true },
+    { key: 'lastName', label: 'Last Name', question: 'Please say the last name.', required: true },
+    { key: 'dob', label: 'Date of Birth', question: 'Please say the date of birth, like January 15, 1980.', required: true },
+    { key: 'mrn', label: 'Medical Record Number', question: 'Please say the medical record number.', required: true },
+    { key: 'gender', label: 'Gender', question: 'Please say the gender: Male, Female, or Other.', required: true },
+    { key: 'cellPhone', label: 'Cell Phone Number', question: 'Please say the cell phone number.', required: true },
   ];
 
   // Drag state
@@ -307,25 +317,62 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
     };
   }, [isDragging]);
 
-  // Text-to-speech for AI responses
-  const speak = useCallback((text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      window.speechSynthesis.speak(utterance);
-    }
+  // Text-to-speech that pauses recognition to avoid feedback loop
+  const speakWithPause = useCallback((text: string): Promise<void> => {
+    return new Promise((resolve) => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        isSpeakingRef.current = true;
+        // Stop listening while speaking
+        stopListeningFnRef.current?.();
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+
+        const fallbackMs = Math.min(10000, Math.max(2500, Math.round(text.length * 50)));
+        let settled = false;
+        const settle = () => {
+          if (settled) return;
+          settled = true;
+          isSpeakingRef.current = false;
+          ignoreTranscriptsUntilRef.current = Date.now() + 800;
+          // Resume listening after speaking
+          setTimeout(() => {
+            startListeningFnRef.current?.();
+          }, 150);
+          resolve();
+        };
+
+        utterance.onend = settle;
+        utterance.onerror = settle;
+        window.speechSynthesis.speak(utterance);
+        setTimeout(settle, fallbackMs);
+      } else {
+        resolve();
+      }
+    });
   }, []);
 
-  // Voice command handling
+  // Refs for start/stop listening (set after hook call)
+  const startListeningFnRef = useRef<() => void>();
+  const stopListeningFnRef = useRef<() => void>();
+
+  // Voice command handling - use refs to avoid stale closures
   const handleVoiceTranscript = useCallback((transcript: string, isFinal: boolean) => {
     if (!isFinal) return;
     
-    const lowerTranscript = transcript.toLowerCase().trim();
+    // Ignore transcripts while speaking or shortly after
+    if (isSpeakingRef.current) return;
+    if (Date.now() < ignoreTranscriptsUntilRef.current) return;
     
-    // Check for "create patient" or "new patient" command
-    if (voiceFlowState === 'idle' || voiceFlowState === 'awaiting_command') {
+    const lowerTranscript = transcript.toLowerCase().trim();
+    const flowState = voiceFlowStateRef.current;
+    const field = currentFieldRef.current;
+    const data = patientDataRef.current;
+    
+    // Check for "create patient" command
+    if (flowState === 'idle' || flowState === 'awaiting_command') {
       if (lowerTranscript.includes('create patient') || 
           lowerTranscript.includes('new patient') || 
           lowerTranscript.includes('add patient') ||
@@ -342,27 +389,24 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
           timestamp: new Date()
         };
         setMessages(prev => [...prev, aiMsg]);
-        speak("I'll help you create a new patient. Please say the first name.");
+        speakWithPause("I'll help you create a new patient. Please say the first name.");
         return;
       }
       
-      // If in awaiting command mode but didn't recognize command
-      if (voiceFlowState === 'awaiting_command') {
-        // Treat as regular chat input
+      if (flowState === 'awaiting_command') {
         setInputValue(transcript);
         setVoiceFlowState('idle');
       }
     }
     
     // Collecting patient data
-    if (voiceFlowState === 'collecting_patient' && currentField) {
-      const fieldIndex = patientFields.findIndex(f => f.key === currentField);
-      const fieldLabel = patientFields[fieldIndex]?.label || currentField;
+    if (flowState === 'collecting_patient' && field) {
+      const fieldIndex = patientFields.findIndex(f => f.key === field);
+      const fieldLabel = patientFields[fieldIndex]?.label || field;
       
-      // Save the current field value
-      setPatientData(prev => ({ ...prev, [currentField]: transcript }));
+      const newData = { ...data, [field]: transcript };
+      setPatientData(newData);
       
-      // Add user message
       const userMsg: Message = {
         id: Date.now().toString(),
         role: 'user',
@@ -371,7 +415,6 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
       };
       setMessages(prev => [...prev, userMsg]);
       
-      // Move to next field
       const nextFieldIndex = fieldIndex + 1;
       if (nextFieldIndex < patientFields.length) {
         const nextField = patientFields[nextFieldIndex];
@@ -384,32 +427,27 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
           timestamp: new Date()
         };
         setMessages(prev => [...prev, aiMsg]);
-        speak(`Got it! Now please say the ${nextField.label}`);
+        speakWithPause(`Got it! Now please say the ${nextField.label}`);
       } else {
-        // All fields collected - show summary
-        const allData = { ...patientData, [currentField]: transcript };
         setCurrentField(null);
-        setVoiceFlowState('idle');
+        setVoiceFlowState('awaiting_command');
         
         const summaryMsg: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: `✅ **Patient Registration Complete!**\n\n**Summary:**\n- First Name: ${allData.firstName}\n- Last Name: ${allData.lastName}\n- DOB: ${allData.dob}\n- MRN: ${allData.mrn}\n- Gender: ${allData.gender}\n- Cell Phone: ${allData.cellPhone}\n\nSay **"confirm"** to proceed to the registration form, or **"start over"** to try again.`,
+          content: `✅ **Patient Registration Complete!**\n\n**Summary:**\n- First Name: ${newData.firstName}\n- Last Name: ${newData.lastName}\n- DOB: ${newData.dob}\n- MRN: ${newData.mrn}\n- Gender: ${newData.gender}\n- Cell Phone: ${newData.cellPhone}\n\nSay **"confirm"** to proceed to the registration form, or **"start over"** to try again.`,
           timestamp: new Date()
         };
         setMessages(prev => [...prev, summaryMsg]);
-        speak("Patient registration complete! Say confirm to proceed to the registration form, or start over to try again.");
-        setVoiceFlowState('awaiting_command');
+        speakWithPause("Patient registration complete! Say confirm to proceed, or start over to try again.");
       }
       return;
     }
     
     // Handle confirm/start over
-    if (lowerTranscript.includes('confirm') && Object.keys(patientData).length > 0) {
+    if (lowerTranscript.includes('confirm') && Object.keys(data).length > 0) {
       toast.success('Navigating to registration form with patient data');
-      speak("Opening registration form with patient data");
-      
-      // Navigate to add patient page (in a real app, you'd pre-fill the form)
+      speakWithPause("Opening registration form with patient data");
       navigate('/patients/add');
       setVoiceFlowState('idle');
       setPatientData({});
@@ -428,10 +466,10 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
         timestamp: new Date()
       };
       setMessages(prev => [...prev, aiMsg]);
-      speak("Cancelled. Say create patient to start again.");
+      speakWithPause("Cancelled. Say create patient to start again.");
       return;
     }
-  }, [voiceFlowState, currentField, patientData, patientFields, navigate, speak]);
+  }, [patientFields, navigate, speakWithPause]);
 
   const handleVoiceError = useCallback((error: string) => {
     if (error === 'no-speech') {
@@ -443,11 +481,17 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
     }
   }, []);
 
-  const { isListening, isSupported, toggleListening, stopListening } = useVoiceCommand({
+  const { isListening, isSupported, startListening, toggleListening, stopListening } = useVoiceCommand({
     onTranscript: handleVoiceTranscript,
     onError: handleVoiceError,
     continuous: true
   });
+
+  // Keep refs updated for speakWithPause
+  useEffect(() => {
+    startListeningFnRef.current = startListening;
+    stopListeningFnRef.current = stopListening;
+  }, [startListening, stopListening]);
 
   const handleVoiceModeToggle = useCallback(() => {
     if (!isSupported) {
@@ -458,7 +502,6 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
     setIsVoiceMode(!isVoiceMode);
     
     if (!isVoiceMode) {
-      // Starting voice mode
       toggleListening();
       setVoiceFlowState('awaiting_command');
       
@@ -469,12 +512,12 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
         timestamp: new Date()
       };
       setMessages(prev => [...prev, aiMsg]);
-      speak("Voice mode activated. Say create patient to start registration, or ask any clinical question.");
+      speakWithPause("Voice mode activated. Say create patient to start registration, or ask any clinical question.");
     } else {
-      // Stopping voice mode
       stopListening();
       setVoiceFlowState('idle');
       window.speechSynthesis.cancel();
+      isSpeakingRef.current = false;
       
       const aiMsg: Message = {
         id: Date.now().toString(),
@@ -484,7 +527,7 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
       };
       setMessages(prev => [...prev, aiMsg]);
     }
-  }, [isVoiceMode, isSupported, toggleListening, stopListening, speak]);
+  }, [isVoiceMode, isSupported, toggleListening, stopListening, speakWithPause]);
 
   // Initialize with welcome message when opened
   useEffect(() => {
