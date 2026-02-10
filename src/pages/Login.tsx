@@ -39,6 +39,7 @@ const Login: React.FC = () => {
 
     // Hardcoded credential check
     if (email === 'admin@pbh.com' && password === 'admin@1234') {
+      enableDemoMode?.();
       toast({
         title: "Welcome back!",
         description: "Successfully authenticated.",
