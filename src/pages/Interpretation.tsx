@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Check, ExternalLink } from 'lucide-react';
+import { Check, ExternalLink, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Loader2 } from 'lucide-react';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -79,6 +82,10 @@ const Interpretation: React.FC = () => {
   const [agreementStatus, setAgreementStatus] = useState<string>('agree');
   const [selectedComment, setSelectedComment] = useState<string>('');
   const [professionalComments, setProfessionalComments] = useState<string>('');
+  const [numPages, setNumPages] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [scale, setScale] = useState(0.9);
+  const [pdfLoading, setPdfLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const signatureInfo = {
@@ -243,12 +250,52 @@ const Interpretation: React.FC = () => {
               Open in New Tab <ExternalLink className="h-3 w-3" />
             </a>
           </div>
-          <div className="flex-1 min-h-[500px]">
-            <iframe
-              src={pdfUrl}
-              className="w-full h-full min-h-[500px] rounded-b-xl"
-              title="PDF Report"
-            />
+
+          {/* PDF Toolbar */}
+          <div className="flex items-center justify-center gap-2 px-4 py-2 bg-[#323639] text-white">
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:bg-white/10" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage <= 1}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex items-center gap-1 bg-white/10 rounded px-2 py-0.5 text-sm">
+              <span>{currentPage}</span>
+              <span className="text-white/60">of {numPages}</span>
+            </div>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:bg-white/10" onClick={() => setCurrentPage(p => Math.min(numPages, p + 1))} disabled={currentPage >= numPages}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <div className="h-4 w-px bg-white/20 mx-1" />
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:bg-white/10" onClick={() => setScale(s => Math.max(0.5, s - 0.15))}>
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <span className="text-xs text-white/80 min-w-[40px] text-center">{Math.round(scale * 100)}%</span>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-white hover:bg-white/10" onClick={() => setScale(s => Math.min(2.5, s + 0.15))}>
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* PDF Content */}
+          <div className="flex-1 min-h-[500px] overflow-auto bg-[#525659] flex items-start justify-center p-4">
+            {pdfLoading && (
+              <div className="flex flex-col items-center justify-center h-full text-white gap-3 py-20">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <span className="text-sm">Loading PDF...</span>
+              </div>
+            )}
+            <Document
+              file={pdfUrl}
+              onLoadSuccess={({ numPages: n }) => { setNumPages(n); setPdfLoading(false); }}
+              onLoadError={() => setPdfLoading(false)}
+              loading={null}
+              className="flex justify-center"
+            >
+              <Page
+                pageNumber={currentPage}
+                scale={scale}
+                className="shadow-xl"
+                renderTextLayer={true}
+                renderAnnotationLayer={true}
+              />
+            </Document>
           </div>
         </div>
       </div>
