@@ -332,17 +332,17 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
         ignoreTranscriptsUntilRef.current = Date.now() + 30000;
 
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.0;
+        utterance.rate = 1.2;
         utterance.pitch = 1.0;
 
-        const fallbackMs = Math.min(15000, Math.max(3000, Math.round(text.length * 80)));
+        const fallbackMs = Math.min(10000, Math.max(2000, Math.round(text.length * 60)));
         let settled = false;
         const settle = () => {
           if (settled) return;
           settled = true;
           isSpeakingRef.current = false;
           // Generous buffer after TTS finishes to let mic clear
-          ignoreTranscriptsUntilRef.current = Date.now() + 2000;
+          ignoreTranscriptsUntilRef.current = Date.now() + 800;
           resolve();
         };
 
