@@ -8,6 +8,7 @@ import { PDFPreviewModal } from '@/components/dashboard/PDFPreviewModal';
 import { RegisterStudyModal } from '@/components/dashboard/RegisterStudyModal';
 import { PlatformHealthCard } from '@/components/dashboard/PlatformHealthCard';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { AIInsightsCard } from '@/components/shared/AIInsightsCard';
 
 interface Report {
   id: string;
@@ -159,7 +160,16 @@ const Dashboard: React.FC = () => {
 
       <PlatformHealthCard onTabChange={setActiveTab} />
 
-      <PDFPreviewModal 
+      <AIInsightsCard
+        context="Dashboard overview insights powered by AI"
+        insights={[
+          { icon: 'trend', text: '2 reports are ready for review. Average turnaround time is 18 hours — 12% faster than last week.' },
+          { icon: 'alert', text: '1 study has exceeded its expected monitoring window. Consider following up with the patient.' },
+          { icon: 'success', text: 'All active events have been triaged. No critical transmissions pending physician review.' },
+        ]}
+      />
+
+      <PDFPreviewModal
         isOpen={isPdfModalOpen}
         onClose={() => setIsPdfModalOpen(false)}
         patientName={selectedReport?.patient || ''}

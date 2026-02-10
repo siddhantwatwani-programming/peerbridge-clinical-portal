@@ -6,6 +6,7 @@ import { DataPageHeader } from '@/components/shared/DataPageHeader';
 import { SearchToolbar } from '@/components/shared/SearchToolbar';
 import { ModernTable } from '@/components/shared/ModernTable';
 import { ModernPagination } from '@/components/shared/ModernPagination';
+import { AIInsightsCard } from '@/components/shared/AIInsightsCard';
 
 interface Patient {
   id: string;
@@ -99,6 +100,15 @@ const Patients: React.FC = () => {
         totalResults={totalResults}
         itemsPerPage={itemsPerPage}
         onPageChange={setCurrentPage}
+      />
+
+      <AIInsightsCard
+        context="Patient enrollment insights powered by AI"
+        insights={[
+          { icon: 'trend', text: '39 patients enrolled across the site. Enrollment rate has increased 8% month-over-month.' },
+          { icon: 'alert', text: '3 patients have upcoming study end dates within the next 48 hours.' },
+          { icon: 'success', text: 'All patient records are complete with valid contact information and demographics.' },
+        ]}
       />
     </div>
   );

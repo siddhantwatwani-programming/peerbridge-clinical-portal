@@ -8,6 +8,7 @@ import { SearchToolbar } from '@/components/shared/SearchToolbar';
 import { ModernTable } from '@/components/shared/ModernTable';
 import { ModernPagination } from '@/components/shared/ModernPagination';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { AIInsightsCard } from '@/components/shared/AIInsightsCard';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -161,6 +162,15 @@ const PatientTransmissions: React.FC = () => {
       <ModernTable columns={columns} data={filteredTransmissions} keyExtractor={(t) => t.id} emptyMessage="No transmissions found" />
 
       <ModernPagination currentPage={currentPage} totalPages={totalPages} totalResults={totalResults} itemsPerPage={itemsPerPage} onPageChange={setCurrentPage} />
+
+      <AIInsightsCard
+        context="Transmission triage insights powered by AI"
+        insights={[
+          { icon: 'alert', text: '1 transmission flagged as high priority — patient reported syncope, requires urgent physician review.' },
+          { icon: 'trend', text: '3 transmissions received this period. Symptom reporting rate is 67% — above site average.' },
+          { icon: 'success', text: 'All transmissions have been assigned to physicians. No unassigned transmissions in queue.' },
+        ]}
+      />
 
       {selectedTransmission && (
         <PDFPreviewModal

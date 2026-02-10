@@ -6,6 +6,7 @@ import { SearchToolbar } from '@/components/shared/SearchToolbar';
 import { ModernTable } from '@/components/shared/ModernTable';
 import { ModernPagination } from '@/components/shared/ModernPagination';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { AIInsightsCard } from '@/components/shared/AIInsightsCard';
 
 interface ResearchReport {
   id: string;
@@ -91,6 +92,14 @@ const Research: React.FC = () => {
         totalResults={totalResults}
         itemsPerPage={itemsPerPage}
         onPageChange={setCurrentPage}
+      />
+
+      <AIInsightsCard
+        context="Research analysis insights powered by AI"
+        insights={[
+          { icon: 'success', text: '1 research report ready with completed status. Data quality checks passed successfully.' },
+          { icon: 'trend', text: 'Research output is consistent — average 1.2 studies completed per month over the last quarter.' },
+        ]}
       />
 
       {selectedReport && (
