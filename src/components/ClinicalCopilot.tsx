@@ -450,9 +450,10 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
     
     // Handle confirm/start over
     if (lowerTranscript.includes('confirm') && Object.keys(patientDataRef.current).length > 0) {
+      const dataToPass = { ...patientDataRef.current };
       toast.success('Navigating to registration form with patient data');
       speakWithPause("Opening registration form with patient data");
-      navigate('/patients/add');
+      navigate('/patients/add', { state: { voicePatientData: dataToPass } });
       setVoiceFlowState('idle');
       setPatientData({});
       return;
