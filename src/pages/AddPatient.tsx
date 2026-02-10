@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useCallback, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -85,6 +85,7 @@ const mandatoryFields: MandatoryField[] = [
 
 const AddPatient: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [noCellPhone, setNoCellPhone] = useState(false);
   const [differentResponsibleParty, setDifferentResponsibleParty] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -100,6 +101,31 @@ const AddPatient: React.FC = () => {
   const [gender, setGender] = useState('');
   const [cellPhone, setCellPhone] = useState('');
   const [voiceValues, setVoiceValues] = useState<Record<string, string>>({});
+
+  // Auto-fill from chatbot voice registration data
+  useEffect(() => {
+    const voiceData = (location.state as any)?.voicePatientData;
+    if (voiceData && typeof voiceData === 'object') {
+      if (voiceData.firstName) setFirstName(voiceData.firstName);
+      if (voiceData.lastName) setLastName(voiceData.lastName);
+      if (voiceData.dob) setDob(voiceData.dob);
+      if (voiceData.mrn) setMrn(voiceData.mrn);
+      if (voiceData.gender) {
+        const genderLower = voiceData.gender.toLowerCase();
+        if (genderLower.includes('male') && !genderLower.includes('female')) setGender('male');
+        else if (genderLower.includes('female')) setGender('female');
+        else setGender('other');
+      }
+      if (voiceData.cellPhone) setCellPhone(voiceData.cellPhone);
+      
+      // Mark as voice-filled
+      const filled: Record<string, string> = {};
+      Object.keys(voiceData).forEach(k => { if (voiceData[k]) filled[k] = voiceData[k]; });
+      setVoiceValues(filled);
+      
+      toast.success('Patient data auto-filled from voice registration');
+    }
+  }, [location.state]);
 
   // Handle single field captured from guided voice input
   const handleFieldCaptured = useCallback((key: string, value: string) => {
