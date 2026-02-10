@@ -90,26 +90,30 @@ const AddPatient: React.FC = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [patientData, setPatientData] = useState({ firstName: '', lastName: '', mrn: '' });
   
-  // Form field states for voice input
+  // Form field states - all controlled for voice input compatibility
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [dob, setDob] = useState('');
+  const [mrn, setMrn] = useState('');
   const [race, setRace] = useState('');
   const [gender, setGender] = useState('');
+  const [cellPhone, setCellPhone] = useState('');
   const [voiceValues, setVoiceValues] = useState<Record<string, string>>({});
 
   // Handle single field captured from guided voice input
   const handleFieldCaptured = useCallback((key: string, value: string) => {
     setVoiceValues(prev => ({ ...prev, [key]: value }));
     
-    // Handle select fields
-    if (key === 'race') setRace(value);
-    if (key === 'gender') setGender(value);
-    
-    // Update DOM input for text fields
-    const input = document.getElementById(key) as HTMLInputElement;
-    if (input && key !== 'race' && key !== 'gender') {
-      input.value = value;
-      // Trigger change event for React to pick up
-      const event = new Event('input', { bubbles: true });
-      input.dispatchEvent(event);
+    // Update controlled state for each field
+    switch (key) {
+      case 'firstName': setFirstName(value); break;
+      case 'lastName': setLastName(value); break;
+      case 'dob': setDob(value); break;
+      case 'mrn': setMrn(value); break;
+      case 'race': setRace(value); break;
+      case 'gender': setGender(value); break;
+      case 'cellPhone': setCellPhone(value); break;
     }
   }, []);
 
@@ -127,11 +131,6 @@ const AddPatient: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const form = e.target as HTMLFormElement;
-    const firstName = (form.elements.namedItem('firstName') as HTMLInputElement)?.value || '';
-    const lastName = (form.elements.namedItem('lastName') as HTMLInputElement)?.value || '';
-    const mrn = (form.elements.namedItem('mrn') as HTMLInputElement)?.value || '';
-    
     setPatientData({ firstName, lastName, mrn });
     setShowSuccessModal(true);
   };
@@ -183,7 +182,8 @@ const AddPatient: React.FC = () => {
                   placeholder="Enter the First Name" 
                   required 
                   className="bg-background"
-                  defaultValue={voiceValues.firstName || ''}
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
@@ -192,6 +192,8 @@ const AddPatient: React.FC = () => {
                   id="middleName" 
                   placeholder="Optional" 
                   className="bg-background"
+                  value={middleName}
+                  onChange={(e) => setMiddleName(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
@@ -208,7 +210,8 @@ const AddPatient: React.FC = () => {
                   placeholder="Enter the Last Name" 
                   required 
                   className="bg-background"
-                  defaultValue={voiceValues.lastName || ''}
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
@@ -227,7 +230,8 @@ const AddPatient: React.FC = () => {
                     placeholder="Enter Date" 
                     required 
                     className="bg-background"
-                    defaultValue={voiceValues.dob || ''}
+                    value={dob}
+                    onChange={(e) => setDob(e.target.value)}
                   />
                 </div>
               </div>
@@ -258,7 +262,8 @@ const AddPatient: React.FC = () => {
                   placeholder="Enter the Medical Record Number" 
                   required 
                   className="bg-background"
-                  defaultValue={voiceValues.mrn || ''}
+                  value={mrn}
+                  onChange={(e) => setMrn(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
@@ -325,7 +330,8 @@ const AddPatient: React.FC = () => {
                   disabled={noCellPhone}
                   required={!noCellPhone}
                   className="bg-background"
-                  defaultValue={voiceValues.cellPhone || ''}
+                  value={cellPhone}
+                  onChange={(e) => setCellPhone(e.target.value)}
                 />
               </div>
               <div className="flex items-center gap-2">
