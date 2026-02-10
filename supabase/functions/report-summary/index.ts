@@ -31,7 +31,8 @@ Always structure your response with:
 1. **Summary**: Brief overview of the study
 2. **Key Findings**: Main observations from the report
 3. **Clinical Significance**: What these findings may indicate
-4. **Recommendation**: Suggested next steps (if applicable)`;
+
+Do NOT include a Recommendation section. Do NOT suggest next steps.`;
 
     const userMessage = `Please provide a clinical summary for the following cardiac monitoring report:
 
