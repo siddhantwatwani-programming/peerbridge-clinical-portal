@@ -370,21 +370,21 @@ export const ClinicalCopilot: React.FC<ClinicalCopilotProps> = ({ open: controll
     
     const lowerTranscript = transcript.toLowerCase().trim();
     
-    // Filter out TTS echo: if transcript substantially overlaps with what was just spoken, discard it
+    // Filter out TTS echo: only within 3s of TTS ending, check if transcript matches spoken text
     const lastSpoken = lastSpokenTextRef.current;
-    if (lastSpoken) {
+    const timeSinceTTS = Date.now() - (ignoreTranscriptsUntilRef.current - 800); // approx when TTS ended
+    if (lastSpoken && timeSinceTTS < 3000) {
       const spokenWords = lastSpoken.split(/\s+/).filter(w => w.length > 3);
       const transcriptWords = lowerTranscript.split(/\s+/).filter(w => w.length > 3);
       if (transcriptWords.length > 0 && spokenWords.length > 0) {
         const matchCount = transcriptWords.filter(w => spokenWords.some(sw => sw.includes(w) || w.includes(sw))).length;
         const matchRatio = matchCount / transcriptWords.length;
-        if (matchRatio > 0.4) {
+        if (matchRatio > 0.5) {
           console.log('Filtered TTS echo:', transcript);
-          return; // This is the TTS being picked up by the mic
+          return;
         }
       }
     }
-    // Clear last spoken after a valid non-echo transcript
     lastSpokenTextRef.current = '';
     
     const flowState = voiceFlowStateRef.current;
